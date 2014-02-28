@@ -153,10 +153,12 @@ char *set_eval_account( set_t *set, char *value )
 	}
 	else if( strcmp( set->key, "password" ) == 0 )
 	{
-		/* set -del should be allowed now, but I don't want to have any
-		   NULL pointers to have to deal with. */
-		if( !value )
-			value = "";
+		/* set -del allows /oper to be used to change the password */
+		if( !value ) {
+			value = PASSWORD_PENDING;
+			((irc_t *)acc->bee->ui_data)->status |= OPER_HACK_ACCOUNT_PASSWORD;
+			irc_rootmsg((irc_t *)acc->bee->ui_data, "You may now use /OPER to set the password");
+		}
 		
 		g_free( acc->pass );
 		acc->pass = g_strdup( value );
