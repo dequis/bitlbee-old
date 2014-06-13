@@ -119,6 +119,8 @@ void twitter_login_finish(struct im_connection *ic)
 		twitter_get_friends_ids(ic, -1);
 	} else
 		twitter_main_loop_start(ic);
+
+	twitter_tracking_stream(ic);
 }
 
 static const struct oauth_service twitter_oauth = {
@@ -427,7 +429,14 @@ static void twitter_logout(struct im_connection *ic)
 	if (td->timeline_gc)
 		imcb_chat_free(td->timeline_gc);
 
+	if (td->hashtag_chats)
+		g_slist_free_full(td->hashtag_chats, (GDestroyNotify)imcb_chat_free);
+
+	if (td->tracking_words)
+		g_slist_free_full(td->tracking_words, g_free);
+
 	if (td) {
+		http_close(td->filter_stream);
 		http_close(td->stream);
 		oauth_info_free(td->oauth_info);
 		g_free(td->user);
@@ -501,12 +510,60 @@ static void twitter_chat_invite(struct groupchat *c, char *who, char *message)
 {
 }
 
+static gboolean twitter_subscribe(struct im_connection *ic, const char *keyword)
+{
+	struct twitter_data *td = ic->proto_data;
+	// Filter out 'non-hashtags' and duplicates
+	if (*keyword != '#') {
+		imcb_log(ic, "Error: Can not subscribe to keyword '%s', only hashtags are supported", keyword);
+		return FALSE;
+	}
+
+	if (g_slist_find_custom(td->tracking_words, keyword, (GCompareFunc)g_strcasecmp))
+		return TRUE;
+
+	td->tracking_words = g_slist_append(td->tracking_words, g_strdup(keyword));
+	if (td->stream) 					// do not try to open tracking stream before login is finished
+		twitter_tracking_stream(ic);
+
+	return TRUE;
+}
+
+static void twitter_unsubscribe(struct im_connection *ic, const char *keyword)
+{
+	struct twitter_data *td = ic->proto_data;
+	GSList* el = g_slist_find_custom(td->tracking_words, keyword, (GCompareFunc)g_strcasecmp);
+	td->tracking_words = g_slist_remove(td->tracking_words, el->data);
+	twitter_tracking_stream(ic);
+}
+
+static struct groupchat *twitter_chat_join( struct im_connection *ic, const char *room, const char *nick, const char *password, set_t **sets )
+{
+	struct twitter_data *td = ic->proto_data;
+	struct groupchat *c;
+
+	if (!twitter_subscribe(ic, room))
+		return NULL;
+
+	c = imcb_chat_new(ic, room);
+	imcb_chat_topic(c, NULL, (char *)room, 0); 
+	imcb_chat_add_buddy(c, ic->acc->user);
+
+	td->hashtag_chats = g_slist_append(td->hashtag_chats, c);
+
+	return c;
+}
+
 static void twitter_chat_leave(struct groupchat *c)
 {
 	struct twitter_data *td = c->ic->proto_data;
 
-	if (c != td->timeline_gc)
-		return;		/* WTF? */
+	if (c != td->timeline_gc) {
+		twitter_unsubscribe(c->ic, c->title);
+		td->hashtag_chats = g_slist_remove(td->hashtag_chats, c);
+		imcb_chat_free(c);
+		return;
+	}
 
 	/* If the user leaves the channel: Fine. Rejoin him/her once new
 	   tweets come in. */
@@ -738,6 +795,7 @@ void twitter_initmodule()
 	ret->remove_buddy = twitter_remove_buddy;
 	ret->chat_msg = twitter_chat_msg;
 	ret->chat_invite = twitter_chat_invite;
+	ret->chat_join = twitter_chat_join;
 	ret->chat_leave = twitter_chat_leave;
 	ret->keepalive = twitter_keepalive;
 	ret->add_permit = twitter_add_permit;
