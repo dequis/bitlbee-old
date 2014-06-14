@@ -2,6 +2,8 @@
 
 ![](http://i.imgur.com/DSsES4E.png)
 
+[![Build Status](https://travis-ci.org/dequis/bitlbee.svg?branch=wip%2Ftravis)](https://travis-ci.org/dequis/bitlbee)
+
 This is an evil fork of BitlBee, using the evil platform known as 'github'.
 
 Collecting random patches and breaking random stuff. Using [git-remote-bzr][] for bzr sync.
