@@ -524,7 +524,7 @@ struct ns_srv_reply **srv_lookup( char *service, char *protocol, char *domain )
 	const unsigned char *buf;
 	ns_msg nsh;
 	ns_rr rr;
-	int i, n, len, size;
+	int n, len, size;
 	
 	g_snprintf( name, sizeof( name ), "_%s._%s.%s", service, protocol, domain );
 	
