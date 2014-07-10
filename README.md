@@ -8,6 +8,9 @@ This is an evil fork of BitlBee, using the evil platform known as 'github'.
 
 Collecting random patches and breaking random stuff. Using [git-remote-bzr][] for bzr sync.
 
+Arch linux PKGBUILD available in the [AUR][], because if you don't have an arch
+package you're clearly not evil enough.
+
 ## Features
 
  * Git
@@ -27,6 +30,7 @@ Collecting random patches and breaking random stuff. Using [git-remote-bzr][] fo
  * Icechat\*
  * MS Comic chat\*
  * No selinux\*
+ * Arch Linux support
 
 _* Might not be implemented natively yet_
 
@@ -102,3 +106,4 @@ git specific stuff since they need to be sync'd perfectly with upstream)
     git config core.excludesfile .bzrignore
 
 [git-remote-bzr]: https://github.com/felipec/git-remote-bzr
+[AUR]: https://aur.archlinux.org/packages/bitlbee-dx-git/
