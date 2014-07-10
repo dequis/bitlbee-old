@@ -413,10 +413,9 @@ signed int do_iconv( char *from_cs, char *to_cs, char *src, char *dst, size_t si
 		return outbuf - dst;
 }
 
-/* A pretty reliable random number generator. Tries to use the /dev/random
+/* A pretty reliable random number generator. Tries to use the /dev/urandom
    devices first, and falls back to the random number generator from libc
-   when it fails. Opens randomizer devices with O_NONBLOCK to make sure a
-   lack of entropy won't halt BitlBee. */
+   when it fails. */
 void random_bytes( unsigned char *buf, int count )
 {
 #ifndef _WIN32
@@ -425,7 +424,7 @@ void random_bytes( unsigned char *buf, int count )
 	/* Actually this probing code isn't really necessary, is it? */
 	if( use_dev == -1 )
 	{
-		if( access( "/dev/random", R_OK ) == 0 || access( "/dev/urandom", R_OK ) == 0 )
+		if( access( "/dev/urandom", R_OK ) == 0 )
 			use_dev = 1;
 		else
 		{
@@ -438,31 +437,21 @@ void random_bytes( unsigned char *buf, int count )
 	{
 		int fd;
 		
-		/* At least on Linux, /dev/random can block if there's not
-		   enough entropy. We really don't want that, so if it can't
-		   give anything, use /dev/urandom instead. */
-		if( ( fd = open( "/dev/random", O_RDONLY | O_NONBLOCK ) ) >= 0 )
-			if( read( fd, buf, count ) == count )
-			{
-				close( fd );
-				return;
-			}
-		close( fd );
-		
 		/* urandom isn't supposed to block at all, but just to be
 		   sure. If it blocks, we'll disable use_dev and use the libc
 		   randomizer instead. */
-		if( ( fd = open( "/dev/urandom", O_RDONLY | O_NONBLOCK ) ) >= 0 )
-			if( read( fd, buf, count ) == count )
+		if( ( fd = open( "/dev/urandom", O_RDONLY ) ) >= 0 )
+		{
+			if( read( fd, buf, count ) != -1 )
 			{
 				close( fd );
 				return;
 			}
+		}
 		close( fd );
 		
-		/* If /dev/random blocks once, we'll still try to use it
-		   again next time. If /dev/urandom also fails for some
-		   reason, stick with libc during this session. */
+		/* If /dev/urandom fails for some reason,
+		   stick with libc during this session. */
 		
 		use_dev = 0;
 		srand( ( getpid() << 16 ) ^ time( NULL ) );

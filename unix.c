@@ -84,6 +84,7 @@ int main( int argc, char *argv[] )
  	otr_init();
 #endif
 	
+	/* This looks evil, but it's only used if you have no /dev/urandom */
 	srand( time( NULL ) ^ getpid() );
 	
 	global.helpfile = g_strdup( HELP_FILE );
