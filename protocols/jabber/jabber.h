@@ -257,6 +257,8 @@ struct jabber_transfer
 #define XMLNS_BYTESTREAMS  "http://jabber.org/protocol/bytestreams"              /* XEP-0065 */
 #define XMLNS_IBB          "http://jabber.org/protocol/ibb"                      /* XEP-0047 */
 
+#define XMLNS_HIPCHAT      "http://hipchat.com"
+
 /* jabber.c */
 void jabber_connect( struct im_connection *ic );
 

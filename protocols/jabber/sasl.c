@@ -54,7 +54,7 @@ xt_status sasl_pkt_mechanisms( struct xt_node *node, gpointer data )
 	struct xt_node *c, *reply;
 	char *s;
 	int sup_plain = 0, sup_digest = 0, sup_gtalk = 0, sup_fb = 0;
-	int want_oauth = FALSE;
+	int want_oauth = FALSE, want_hipchat = FALSE;
 	GString *mechs;
 	
 	if( !sasl_supported( ic ) )
@@ -75,7 +75,8 @@ xt_status sasl_pkt_mechanisms( struct xt_node *node, gpointer data )
 	}
 	
 	want_oauth = set_getbool( &ic->acc->set, "oauth" );
-	
+	want_hipchat = (jd->subproto == JSUB_HIPCHAT);
+
 	mechs = g_string_new( "" );
 	c = node->children;
 	while( ( c = xt_find_node( c, "mechanism" ) ) )
@@ -110,7 +111,11 @@ xt_status sasl_pkt_mechanisms( struct xt_node *node, gpointer data )
 	g_string_free( mechs, TRUE );
 	
 	reply = xt_new_node( "auth", NULL, NULL );
-	xt_add_attr( reply, "xmlns", XMLNS_SASL );
+	if (!want_hipchat) {
+		xt_add_attr( reply, "xmlns", XMLNS_SASL );
+	} else {
+		xt_add_attr( reply, "xmlns", XMLNS_HIPCHAT );
+	}
 	
 	if( sup_gtalk && want_oauth )
 	{
@@ -151,15 +156,33 @@ xt_status sasl_pkt_mechanisms( struct xt_node *node, gpointer data )
 	else if( sup_plain )
 	{
 		int len;
-		
-		xt_add_attr( reply, "mechanism", "PLAIN" );
-		
+		GString *gs;
+		char *username;
+
+		if ( !want_hipchat ) {
+			xt_add_attr( reply, "mechanism", "PLAIN" );
+			username = jd->username;
+		} else {
+			username = jd->me;
+		}
+
+		/* set an arbitrary initial size to avoid reallocations */
+		gs = g_string_sized_new( 128 );
+
 		/* With SASL PLAIN in XMPP, the text should be b64(\0user\0pass) */
-		len = strlen( jd->username ) + strlen( ic->acc->pass ) + 2;
-		s = g_malloc( len + 1 );
-		s[0] = 0;
-		strcpy( s + 1, jd->username );
-		strcpy( s + 2 + strlen( jd->username ), ic->acc->pass );
+		g_string_append_c( gs, '\0' );
+		g_string_append( gs, username );
+		g_string_append_c( gs, '\0' );
+		g_string_append( gs, ic->acc->pass );
+		if ( want_hipchat ) {
+			/* Hipchat's variation adds \0resource at the end */
+			g_string_append_c( gs, '\0' );
+			g_string_append( gs, set_getstr( &ic->acc->set, "resource" ) );
+		}
+
+		len = gs->len;
+		s = g_string_free(gs, FALSE);
+
 		reply->text = base64_encode( (unsigned char *)s, len );
 		reply->text_len = strlen( reply->text );
 		g_free( s );
