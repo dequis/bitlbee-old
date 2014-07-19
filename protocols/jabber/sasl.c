@@ -422,6 +422,34 @@ silent_error:
 	return ret;
 }
 
+static xt_status hipchat_handle_success( struct im_connection *ic, struct xt_node *node )
+{
+	struct jabber_data *jd = ic->proto_data;
+	char *sep, *jid;
+
+	jid = xt_find_attr( node, "jid" );
+
+	sep = strchr( jid, '/' );
+	if( sep )
+		*sep = '\0';
+
+	jabber_set_me( ic, jid );
+	imcb_log( ic, "Setting Hipchat JID to %s", jid );
+
+	if ( sep )
+		*sep = '/';
+
+	/* Hipchat's auth doesn't expect a restart here */
+	jd->flags &= ~JFLAG_STREAM_RESTART;
+
+	if( !jabber_get_roster( ic ) )
+		return XT_ABORT;
+	if( !jabber_iq_disco_server( ic ) )
+		return XT_ABORT;
+
+	return XT_HANDLED;
+}
+
 xt_status sasl_pkt_result( struct xt_node *node, gpointer data )
 {
 	struct im_connection *ic = data;
@@ -440,6 +468,10 @@ xt_status sasl_pkt_result( struct xt_node *node, gpointer data )
 	{
 		imcb_log( ic, "Authentication finished" );
 		jd->flags |= JFLAG_AUTHENTICATED | JFLAG_STREAM_RESTART;
+
+		if ( jd->subproto == JSUB_HIPCHAT ) {
+			return hipchat_handle_success( ic, node );
+		}
 	}
 	else if( strcmp( node->name, "failure" ) == 0 )
 	{

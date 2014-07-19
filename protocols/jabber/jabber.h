@@ -273,6 +273,7 @@ int jabber_remove_from_roster( struct im_connection *ic, char *handle );
 xt_status jabber_iq_query_features( struct im_connection *ic, char *bare_jid );
 xt_status jabber_iq_query_server( struct im_connection *ic, char *jid, char *xmlns );
 void jabber_iq_version_send( struct im_connection *ic, struct jabber_buddy *bud, void *data );
+int jabber_iq_disco_server( struct im_connection *ic );
 
 /* si.c */
 int jabber_si_handle_request( struct im_connection *ic, struct xt_node *node, struct xt_node *sinode );
