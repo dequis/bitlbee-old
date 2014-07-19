@@ -92,6 +92,7 @@ typedef struct {
 	const char *name;
 	jabber_subproto_t id;
 	const struct oauth2_service *oauth2_service;
+	const char *server;
 } jabber_subproto_desc_t;
 
 struct jabber_data

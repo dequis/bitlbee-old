@@ -54,10 +54,10 @@ static const int jabber_port_list[] = {
 };
 
 static jabber_subproto_desc_t jabber_subproto_list[] = {
-	{"jabber", JSUB_NONE, NULL},
-	{"gtalk", JSUB_GTALK, &oauth2_service_google},
-	{"fb", JSUB_FACEBOOK, &oauth2_service_facebook},
-	{"hipchat", JSUB_HIPCHAT, NULL},
+	{"jabber", JSUB_NONE, NULL, NULL},
+	{"gtalk", JSUB_GTALK, &oauth2_service_google, "talk.google.com"},
+	{"fb", JSUB_FACEBOOK, &oauth2_service_facebook, "chat.facebook.com"},
+	{"hipchat", JSUB_HIPCHAT, NULL, "chat.hipchat.com"},
 	{NULL},
 };
 
@@ -89,7 +89,7 @@ static void jabber_init( account_t *acc )
 	s = set_add( &acc->set, "sasl", "true", set_eval_bool, acc );
 	s->flags |= ACC_SET_OFFLINE_ONLY | SET_HIDDEN_DEFAULT;
 	
-	s = set_add( &acc->set, "server", NULL, set_eval_account, acc );
+	s = set_add( &acc->set, "server", subproto->server, set_eval_account, acc );
 	s->flags |= SET_NOSAVE | ACC_SET_OFFLINE_ONLY | SET_NULL_OK;
 	
 	s = set_add( &acc->set, "ssl", "false", set_eval_bool, acc );
