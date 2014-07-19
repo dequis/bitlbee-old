@@ -633,6 +633,7 @@ void jabber_initmodule()
 {
 	int i;
 	struct prpl funcs;
+	memset( &funcs, 0, sizeof( funcs ) );
 
 	funcs.mms = 0;                        /* no limit */
 	funcs.login = jabber_login;
