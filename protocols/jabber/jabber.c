@@ -126,6 +126,7 @@ static void jabber_login( account_t *acc )
 	
 	jd->ic = ic;
 	ic->proto_data = jd;
+	jd->subproto = subproto->id;
 	
 	jabber_set_me( ic, acc->user );
 	
