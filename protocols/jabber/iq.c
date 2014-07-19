@@ -435,6 +435,12 @@ static xt_status jabber_parse_roster( struct im_connection *ic, struct xt_node *
 		char *jid = xt_find_attr( c, "jid" );
 		char *name = xt_find_attr( c, "name" );
 		char *sub = xt_find_attr( c, "subscription" );
+		char *mention_name;
+
+		if( ( mention_name = xt_find_attr( c, "mention_name" ) ) ) {
+			// throw away the real name for now
+			name = mention_name;
+		}
 		
 		if( jid && sub )
 		{
