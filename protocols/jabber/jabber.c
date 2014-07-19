@@ -54,10 +54,10 @@ static const int jabber_port_list[] = {
 };
 
 static jabber_subproto_desc_t jabber_subproto_list[] = {
-	{"jabber", JSUB_NONE, FALSE},
-	{"gtalk", JSUB_GTALK, TRUE},
-	{"fb", JSUB_FACEBOOK, TRUE},
-	{"hipchat", JSUB_HIPCHAT, FALSE},
+	{"jabber", JSUB_NONE, NULL},
+	{"gtalk", JSUB_GTALK, &oauth2_service_google},
+	{"fb", JSUB_FACEBOOK, &oauth2_service_facebook},
+	{"hipchat", JSUB_HIPCHAT, NULL},
 	{NULL},
 };
 
@@ -69,7 +69,7 @@ static void jabber_init( account_t *acc )
 	
 	s = set_add( &acc->set, "activity_timeout", "600", set_eval_int, acc );
 
-	if (subproto->has_oauth) {
+	if (subproto->oauth2_service) {
 		s = set_add( &acc->set, "oauth", "false", set_eval_oauth, acc );
 	}
 
@@ -116,6 +116,7 @@ static void jabber_login( account_t *acc )
 {
 	struct im_connection *ic = imcb_new( acc );
 	struct jabber_data *jd = g_new0( struct jabber_data, 1 );
+	jabber_subproto_desc_t *subproto = acc->prpl->data;
 	char *s;
 	
 	/* For now this is needed in the _connected() handlers if using
@@ -151,19 +152,14 @@ static void jabber_login( account_t *acc )
 	jd->node_cache = g_hash_table_new_full( g_str_hash, g_str_equal, NULL, jabber_cache_entry_free );
 	jd->buddies = g_hash_table_new( g_str_hash, g_str_equal );
 	
-	if( set_getbool( &acc->set, "oauth" ) )
+	if( subproto->oauth2_service && set_getbool( &acc->set, "oauth" ) )
 	{
 		GSList *p_in = NULL;
 		const char *tok;
 		
 		jd->fd = jd->r_inpa = jd->w_inpa = -1;
 		
-		if( strstr( jd->server, ".live.com" ) )
-			jd->oauth2_service = &oauth2_service_mslive;
-		else if( strstr( jd->server, ".facebook.com" ) )
-			jd->oauth2_service = &oauth2_service_facebook;
-		else
-			jd->oauth2_service = &oauth2_service_google;
+		jd->oauth2_service = subproto->oauth2_service;
 		
 		oauth_params_parse( &p_in, ic->acc->pass );
 		

@@ -91,7 +91,7 @@ typedef enum
 typedef struct {
 	const char *name;
 	jabber_subproto_t id;
-	gboolean has_oauth;
+	const struct oauth2_service *oauth2_service;
 } jabber_subproto_desc_t;
 
 struct jabber_data
