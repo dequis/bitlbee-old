@@ -54,10 +54,10 @@ static const int jabber_port_list[] = {
 };
 
 static jabber_subproto_desc_t jabber_subproto_list[] = {
-	{"jabber", JSUB_NONE, NULL, NULL},
-	{"gtalk", JSUB_GTALK, &oauth2_service_google, "talk.google.com"},
-	{"fb", JSUB_FACEBOOK, &oauth2_service_facebook, "chat.facebook.com"},
-	{"hipchat", JSUB_HIPCHAT, NULL, "chat.hipchat.com"},
+	{"jabber", JSUB_NONE, NULL, NULL, NULL},
+	{"gtalk", JSUB_GTALK, &oauth2_service_google, "talk.google.com", NULL},
+	{"fb", JSUB_FACEBOOK, &oauth2_service_facebook, "chat.facebook.com", "%full_name"},
+	{"hipchat", JSUB_HIPCHAT, NULL, "chat.hipchat.com", "%full_name"},
 	{NULL},
 };
 
@@ -108,6 +108,10 @@ static void jabber_init( account_t *acc )
 	
 	acc->flags |= ACC_FLAG_AWAY_MESSAGE | ACC_FLAG_STATUS_MESSAGE |
 	              ACC_FLAG_HANDLE_DOMAINS;
+
+	if (subproto->nick_format) {
+		set_setstr( &acc->set, "nick_format", (char *) subproto->nick_format );
+	}
 }
 
 static void jabber_generate_id_hash( struct jabber_data *jd );
