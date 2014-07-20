@@ -69,6 +69,8 @@ static void jabber_init( account_t *acc )
 	
 	s = set_add( &acc->set, "activity_timeout", "600", set_eval_int, acc );
 
+	s = set_add( &acc->set, "display_name", NULL, NULL, acc );
+
 	if (subproto->oauth2_service) {
 		s = set_add( &acc->set, "oauth", "false", set_eval_oauth, acc );
 	}
@@ -487,14 +489,23 @@ static void jabber_remove_buddy( struct im_connection *ic, char *who, char *grou
 static struct groupchat *jabber_chat_join_( struct im_connection *ic, const char *room, const char *nick, const char *password, set_t **sets )
 {
 	struct jabber_data *jd = ic->proto_data;
+	char *final_nick;
 	
+	/* Ignore the passed nick parameter if we have our own default */
+	if ( !( final_nick = set_getstr( sets, "nick" ) ) ) {
+		if ( !( final_nick = set_getstr( &ic->acc->set, "display_name" ) ) ) {
+			/* Well, whatever, actually use the provided default, then */
+			final_nick = (char *) nick;
+		}
+	}
+
 	if( strchr( room, '@' ) == NULL )
 		imcb_error( ic, "%s is not a valid Jabber room name. Maybe you mean %s@conference.%s?",
 		            room, room, jd->server );
 	else if( jabber_chat_by_jid( ic, room ) )
 		imcb_error( ic, "Already present in chat `%s'", room );
 	else
-		return jabber_chat_join( ic, room, nick, set_getstr( sets, "password" ) );
+		return jabber_chat_join( ic, room, final_nick, set_getstr( sets, "password" ) );
 	
 	return NULL;
 }
