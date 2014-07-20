@@ -91,10 +91,9 @@ static void jabber_init( account_t *acc )
 	s = set_add( &acc->set, "sasl", "true", set_eval_bool, acc );
 	s->flags |= ACC_SET_OFFLINE_ONLY | SET_HIDDEN_DEFAULT;
 	
-	s = set_add( &acc->set, "server", subproto->server, set_eval_account, acc );
+	s = set_add( &acc->set, "server", NULL, set_eval_account, acc );
 	s->flags |= SET_NOSAVE | ACC_SET_OFFLINE_ONLY | SET_NULL_OK;
-	acc->server = (char *) subproto->server;
-	
+
 	s = set_add( &acc->set, "ssl", "false", set_eval_bool, acc );
 	s->flags |= ACC_SET_OFFLINE_ONLY;
 	
@@ -111,6 +110,10 @@ static void jabber_init( account_t *acc )
 	
 	acc->flags |= ACC_FLAG_AWAY_MESSAGE | ACC_FLAG_STATUS_MESSAGE |
 	              ACC_FLAG_HANDLE_DOMAINS;
+
+	if (subproto->server) {
+		set_setstr( &acc->set, "server", (char *) subproto->server );
+	}
 
 	if (subproto->nick_format) {
 		set_setstr( &acc->set, "nick_format", (char *) subproto->nick_format );
