@@ -259,7 +259,9 @@ struct jabber_transfer
 #define XMLNS_BYTESTREAMS  "http://jabber.org/protocol/bytestreams"              /* XEP-0065 */
 #define XMLNS_IBB          "http://jabber.org/protocol/ibb"                      /* XEP-0047 */
 
-#define XMLNS_HIPCHAT      "http://hipchat.com"
+/* Hipchat protocol extensions*/
+#define XMLNS_HIPCHAT         "http://hipchat.com"
+#define XMLNS_HIPCHAT_PROFILE "http://hipchat.com/protocol/profile"
 
 /* jabber.c */
 void jabber_connect( struct im_connection *ic );
@@ -270,6 +272,7 @@ int jabber_init_iq_auth( struct im_connection *ic );
 xt_status jabber_pkt_bind_sess( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 int jabber_get_roster( struct im_connection *ic );
 int jabber_get_vcard( struct im_connection *ic, char *bare_jid );
+int jabber_get_hipchat_profile( struct im_connection *ic );
 int jabber_add_to_roster( struct im_connection *ic, const char *handle, const char *name, const char *group );
 int jabber_remove_from_roster( struct im_connection *ic, char *handle );
 xt_status jabber_iq_query_features( struct im_connection *ic, char *bare_jid );

@@ -26,6 +26,7 @@
 
 static xt_status jabber_parse_roster( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 static xt_status jabber_iq_display_vcard( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
+static xt_status jabber_parse_hipchat_profile( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 
 xt_status jabber_pkt_iq( struct xt_node *node, gpointer data )
 {
@@ -606,6 +607,46 @@ static xt_status jabber_iq_display_vcard( struct im_connection *ic, struct xt_no
 	g_string_free( reply, TRUE );
 	
 	return XT_HANDLED;
+}
+
+int jabber_get_hipchat_profile( struct im_connection *ic )
+{
+	struct jabber_data *jd = ic->proto_data;
+	struct xt_node *node;
+	int st;
+	
+	imcb_log( ic, "Fetching hipchat profile for %s", jd->me );
+	
+	node = xt_new_node( "query", NULL, NULL );
+	xt_add_attr( node, "xmlns", XMLNS_HIPCHAT_PROFILE );
+	node = jabber_make_packet( "iq", "get", jd->me, node );
+	
+	jabber_cache_add( ic, node, jabber_parse_hipchat_profile );
+	st = jabber_write_packet( ic, node );
+	
+	return st;
+}
+
+static xt_status jabber_parse_hipchat_profile( struct im_connection *ic, struct xt_node *node, struct xt_node *orig ) {
+	struct xt_node *query, *name_node;
+	//char *name;
+	
+	if( !( query = xt_find_node( node->children, "query" ) ) )
+	{
+		imcb_log( ic, "Warning: Received NULL profile packet" );
+		return XT_HANDLED;
+	}
+	
+	if ( (name_node = xt_find_node( query->children, "name" ) ) )
+	{
+		imcb_log( ic, "Received real name: %s", name_node->text );
+	}
+	else
+	{
+		imcb_log( ic, "Warning: Can't find real name in profile. Joining groupchats will not be possible." );
+	}
+	return XT_HANDLED;
+
 }
 
 static xt_status jabber_add_to_roster_callback( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
