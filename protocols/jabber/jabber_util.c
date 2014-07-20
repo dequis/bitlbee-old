@@ -799,6 +799,11 @@ gboolean jabber_set_me( struct im_connection *ic, const char *me )
 	jd->server = strchr( jd->me, '@' );
 	jd->username = g_strndup( jd->me, jd->server - jd->me );
 	jd->server ++;
+
+	/* Most checks for 'own JID' are done with acc->user
+	 * The corresponding setting is an offline-only setting */
+	g_free( ic->acc->user );
+	ic->acc->user = g_strdup( jd->me );
 	
 	return TRUE;
 }
