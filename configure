@@ -48,12 +48,20 @@ ssl=auto
 
 pie=1
 
+
+
 arch=`uname -s`
 cpu=`uname -m`
 
 GLIB_MIN_VERSION=2.14
 
 echo BitlBee configure
+
+# Cygwin doesn't support PIC/PIE
+case "$arch" in
+    CYGWIN* )
+        pie=0;;
+esac
 
 while [ -n "$1" ]; do
 	e="`expr "X$1" : 'X--\(.*=.*\)'`"
