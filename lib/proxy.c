@@ -71,7 +71,7 @@ static int proxy_connect_none(const char *host, unsigned short port_, struct PHB
 static gboolean gaim_io_connected(gpointer data, gint source, b_input_condition cond)
 {
 	struct PHB *phb = data;
-	unsigned int len;
+	socklen_t len;
 	int error = ETIMEDOUT;
 	len = sizeof(error);
 	
@@ -221,7 +221,7 @@ static gboolean http_canwrite(gpointer data, gint source, b_input_condition cond
 {
 	char cmd[384];
 	struct PHB *phb = data;
-	unsigned int len;
+	socklen_t len;
 	int error = ETIMEDOUT;
 	if (phb->inpa > 0)
 		b_event_remove(phb->inpa);
@@ -316,7 +316,7 @@ static gboolean s4_canwrite(gpointer data, gint source, b_input_condition cond)
 	unsigned char packet[12];
 	struct hostent *hp;
 	struct PHB *phb = data;
-	unsigned int len;
+	socklen_t len;
 	int error = ETIMEDOUT;
 	if (phb->inpa > 0)
 		b_event_remove(phb->inpa);
@@ -508,7 +508,7 @@ static gboolean s5_canwrite(gpointer data, gint source, b_input_condition cond)
 	unsigned char buf[512];
 	int i;
 	struct PHB *phb = data;
-	unsigned int len;
+	socklen_t len;
 	int error = ETIMEDOUT;
 	if (phb->inpa > 0)
 		b_event_remove(phb->inpa);

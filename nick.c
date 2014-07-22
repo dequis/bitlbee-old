@@ -40,7 +40,7 @@ static char *clean_handle( const char *orig )
 	
 	do {
 		if (*orig != ' ')
-			new[i++] = tolower( *orig );
+			new[i++] = tolower( (unsigned int)*orig );
 	}
 	while (*(orig++));
 	
@@ -143,11 +143,11 @@ char *nick_gen( bee_user_t *bu )
 				}
 				fmt += 2;
 			}
-			else if( isdigit( *fmt ) )
+			else if( isdigit( (unsigned char)*fmt ) )
 			{
 				len = 0;
 				/* Grab a number. */
-				while( isdigit( *fmt ) )
+				while( isdigit( (unsigned char)*fmt ) )
 					len = len * 10 + ( *(fmt++) - '0' );
 			}
 			else if( g_strncasecmp( fmt, "nick", 4 ) == 0 )
@@ -330,7 +330,7 @@ void nick_strip( irc_t *irc, char *nick )
 			}
 		}
 	}
-	if( isdigit( nick[0] ) )
+	if( isdigit( (unsigned char)nick[0] ) )
 	{
 		char *orig;
 		
@@ -350,7 +350,7 @@ gboolean nick_ok( irc_t *irc, const char *nick )
 	const char *s;
 	
 	/* Empty/long nicks are not allowed, nor numbers at [0] */
-	if( !*nick || isdigit( nick[0] ) || strlen( nick ) > MAX_NICK_LENGTH )
+	if( !*nick || isdigit( (unsigned char)nick[0] ) || strlen( nick ) > MAX_NICK_LENGTH )
 		return 0;
 	
 	if( irc && ( irc->status & IRC_UTF8_NICKS ) )
