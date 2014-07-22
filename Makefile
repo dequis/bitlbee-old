@@ -26,7 +26,7 @@ endif
 # Expansion of variables
 subdirobjs = $(foreach dir,$(subdirs),$(dir)/$(dir).o)
 
-all: $(OUTFILE) $(OTR_PI) $(SKYPE_PI) doc systemd
+all: $(OUTFILE) $(OTR_PI) $(SKYPE_PI) $(DOC) systemd
 ifdef SKYPE_PI
 	$(MAKE) -C protocols/skype doc
 endif
