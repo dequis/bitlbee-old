@@ -366,10 +366,10 @@ int main()
 	ns_msg nsh;
 	ns_rr rr;
 
-    /* Not all platforms we want to work on have
-     ns_* routines, so use this to make sure
-     the compiler uses it.*/
-    return (int)(sizeof(nsh) + sizeof(rr));
+	/* Not all platforms we want to work on have
+	 ns_* routines, so use this to make sure
+	 the compiler uses it.*/
+	return (int)(sizeof(nsh) + sizeof(rr));
 }
 '
 
