@@ -630,17 +630,17 @@ static xt_status jabber_parse_hipchat_profile( struct im_connection *ic, struct 
 	if( !( query = xt_find_node( node->children, "query" ) ) )
 	{
 		imcb_log( ic, "Warning: Received NULL profile packet" );
-		return XT_HANDLED;
+		return XT_ABORT;
 	}
-	
-	if ( (name_node = xt_find_node( query->children, "name" ) ) )
-	{
-		imcb_log( ic, "Received real name: %s", name_node->text );
-	}
-	else
+
+	name_node = xt_find_node( query->children, "name" );
+	if ( !name_node )
 	{
 		imcb_log( ic, "Warning: Can't find real name in profile. Joining groupchats will not be possible." );
+		return XT_ABORT;
 	}
+
+	set_setstr( &ic->acc->set, "display_name", name_node->text );
 	return XT_HANDLED;
 
 }
