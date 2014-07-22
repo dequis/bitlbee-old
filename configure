@@ -643,6 +643,9 @@ if [ ! -e doc/user-guide/help.txt ] && ! type xmlto > /dev/null 2> /dev/null; th
 	echo
 	echo 'WARNING: Building from an unreleased source tree without prebuilt helpfile.'
 	echo 'Install xmlto if you want online help to work.'
+	echo 'DOC='>> Makefile.settings
+else
+	echo 'DOC=doc'>> Makefile.settings
 fi
 
 REAL_BITLBEE_VERSION=`grep '^#define BITLBEE_VERSION ' $srcdir/bitlbee.h | sed 's/.*\"\(.*\)\".*/\1/'`
