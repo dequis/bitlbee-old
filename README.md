@@ -8,6 +8,8 @@ This is an evil fork of BitlBee, using the evil platform known as 'github'.
 
 Collecting random patches and breaking random stuff. Using [git-remote-bzr][] for bzr sync.
 
+Mappings of bzr revisions to git commits are available here: [html][], [raw][] (created using [git-bzr-rev-map][])
+
 Arch linux PKGBUILD available in the [AUR][], because if you don't have an arch
 package you're clearly not evil enough.
 
@@ -106,4 +108,7 @@ git specific stuff since they need to be sync'd perfectly with upstream)
     git config core.excludesfile .bzrignore
 
 [git-remote-bzr]: https://github.com/felipec/git-remote-bzr
+[html]: http://bzr.dequis.org/revmap/fancy.html
+[raw]: http://bzr.dequis.org/revmap/raw.txt
+[git-bzr-rev-map]: https://github.com/dequis/git-bzr-rev-map
 [AUR]: https://aur.archlinux.org/packages/bitlbee-dx-git/
