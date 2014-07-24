@@ -355,47 +355,41 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 {
 	struct xt_node *subject = xt_find_node( node->children, "subject" );
 	struct xt_node *body = xt_find_node( node->children, "body" );
-	char *from = ( bud ) ? bud->bare_jid : xt_find_attr( node, "from" );
-	struct groupchat *chat = ( from ) ? jabber_chat_by_jid( ic, from ) : NULL;
-	struct jabber_chat *jc = ( chat ) ? chat->data : NULL;
-	char *s;
+	struct groupchat *chat = NULL;
+	struct jabber_chat *jc;
+	char *from, *nick;
+
+	from = ( bud ) ? bud->full_jid : xt_find_attr( node, "from" );
+
+	if ( from )
+	{
+		nick = strchr( from, '/');
+		if ( nick )
+		{
+			*nick = 0;
+		}
+		chat = jabber_chat_by_jid( ic, from );
+		if ( nick )
+		{
+			*nick = '/';
+			nick++;
+		}
+	}
+
+	jc = ( chat ) ? chat->data : NULL;
 	
 	if( subject && chat )
 	{
-		s = bud ? strchr( bud->ext_jid, '/' ) : NULL;
-		if( s ) *s = 0;
-		imcb_chat_topic( chat, bud ? bud->ext_jid : NULL, subject->text_len > 0 ?
+		imcb_chat_topic( chat, bud ? bud->bare_jid : NULL, subject->text_len > 0 ?
 		                 subject->text : NULL, jabber_get_timestamp( node ) );
-		if( s ) *s = '/';
 	}
 	
 	if( bud == NULL || ( jc && ~jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me ) )
 	{
-		char *nick;
-		
 		if( body == NULL || body->text_len == 0 )
 			/* Meh. Empty messages aren't very interesting, no matter
 			   how much some servers love to send them. */
 			return;
-		
-		s = xt_find_attr( node, "from" ); /* pkt_message() already NULL-checked this one. */
-		nick = strchr( s, '/' );
-		if( nick )
-		{
-			/* If this message included a resource/nick we don't know,
-			   we might still know the groupchat itself. */
-			*nick = 0;
-			chat = jabber_chat_by_jid( ic, s );
-			*nick = '/';
-			
-			nick ++;
-		}
-		else
-		{
-			/* message.c uses the EXACT_JID option, so bud should
-			   always be NULL here for bare JIDs. */
-			chat = jabber_chat_by_jid( ic, s );
-		}
 		
 		if( nick == NULL )
 		{
@@ -403,7 +397,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 			if( chat )
 				imcb_chat_log( chat, "From conference server: %s", body->text );
 			else
-				imcb_log( ic, "System message from unknown groupchat %s: %s", s, body->text );
+				imcb_log( ic, "System message from unknown groupchat %s: %s", from, body->text );
 		}
 		else
 		{
@@ -412,7 +406,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 			if( chat )
 				imcb_chat_log( chat, "Message from unknown participant %s: %s", nick, body->text );
 			else
-				imcb_log( ic, "Groupchat message from unknown JID %s: %s", s, body->text );
+				imcb_log( ic, "Groupchat message from unknown JID %s: %s", from, body->text );
 		}
 		
 		return;
@@ -425,9 +419,6 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 	}
 	if( body && body->text_len > 0 )
 	{
-		s = strchr( bud->ext_jid, '/' );
-		if( s ) *s = 0;
-		imcb_chat_msg( chat, bud->ext_jid, body->text, 0, jabber_get_timestamp( node ) );
-		if( s ) *s = '/';
+		imcb_chat_msg( chat, bud->bare_jid, body->text, 0, jabber_get_timestamp( node ) );
 	}
 }
