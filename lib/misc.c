@@ -524,7 +524,7 @@ struct ns_srv_reply **srv_lookup( char *service, char *protocol, char *domain )
 	const unsigned char *buf;
 	ns_msg nsh;
 	ns_rr rr;
-	int i, n, len, size;
+	int n, len, size;
 	
 	g_snprintf( name, sizeof( name ), "_%s._%s.%s", service, protocol, domain );
 	
@@ -537,27 +537,20 @@ struct ns_srv_reply **srv_lookup( char *service, char *protocol, char *domain )
 	n = 0;
 	while( ns_parserr( &nsh, ns_s_an, n, &rr ) == 0 )
 	{
-		size = ns_rr_rdlen( rr );
+		char name[NS_MAXDNAME];
+
+		if( ns_rr_rdlen( rr ) < 7)
+		    break;
+
 		buf = ns_rr_rdata( rr );
 		
-		len = 0;
-		for( i = 6; i < size && buf[i]; i += buf[i] + 1 )
-			len += buf[i] + 1;
-		
-		if( i > size )
+		if( dn_expand(querybuf, querybuf + size, &buf[6], name, NS_MAXDNAME) == -1 )
 			break;
+
+		len = strlen(name) + 1;
 		
 		reply = g_malloc( sizeof( struct ns_srv_reply ) + len );
-		memcpy( reply->name, buf + 7, len );
-		
-		for( i = buf[6]; i < len && buf[7+i]; i += buf[7+i] + 1 )
-			reply->name[i] = '.';
-		
-		if( i > len )
-		{
-			g_free( reply );
-			break;
-		}
+		memcpy( reply->name, name, len );
 		
 		reply->prio = ( buf[0] << 8 ) | buf[1];
 		reply->weight = ( buf[2] << 8 ) | buf[3];
@@ -681,7 +674,7 @@ int md5_verify_password( char *password, char *hash )
 /* Split commands (root-style, *not* IRC-style). Handles "quoting of"
    white\ space in 'various ways'. Returns a NULL-terminated static
    char** so watch out with nested use! Definitely not thread-safe. */
-char **split_command_parts( char *command )
+char **split_command_parts( char *command, int limit )
 {
 	static char *cmd[IRC_MAX_ARGS+1];
 	char *s, q = 0;
@@ -691,11 +684,12 @@ char **split_command_parts( char *command )
 	cmd[0] = command;
 	k = 1;
 	for( s = command; *s && k < IRC_MAX_ARGS; s ++ )
+	{
 		if( *s == ' ' && !q )
 		{
 			*s = 0;
 			while( *++s == ' ' );
-			if( *s == '"' || *s == '\'' )
+			if( k != limit && (*s == '"' || *s == '\'') )
 			{
 				q = *s;
 				s ++;
@@ -703,6 +697,9 @@ char **split_command_parts( char *command )
 			if( *s )
 			{
 				cmd[k++] = s;
+				if (limit && k > limit) {
+					break;
+				}
 				s --;
 			}
 			else
@@ -721,6 +718,7 @@ char **split_command_parts( char *command )
 		{
 			q = *s = 0;
 		}
+	}
 	
 	/* Full zero-padding for easier argc checking. */
 	while( k <= IRC_MAX_ARGS )
