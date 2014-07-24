@@ -355,8 +355,9 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 {
 	struct xt_node *subject = xt_find_node( node->children, "subject" );
 	struct xt_node *body = xt_find_node( node->children, "body" );
-	struct groupchat *chat = bud ? jabber_chat_by_jid( ic, bud->bare_jid ) : NULL;
-	struct jabber_chat *jc = chat ? chat->data : NULL;
+	char *from = ( bud ) ? bud->bare_jid : xt_find_attr( node, "from" );
+	struct groupchat *chat = ( from ) ? jabber_chat_by_jid( ic, from ) : NULL;
+	struct jabber_chat *jc = ( chat ) ? chat->data : NULL;
 	char *s;
 	
 	if( subject && chat )
