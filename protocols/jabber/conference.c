@@ -357,7 +357,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 	struct xt_node *body = xt_find_node( node->children, "body" );
 	struct groupchat *chat = NULL;
 	struct jabber_chat *jc;
-	char *from, *nick;
+	char *from, *nick, *final_from;
 
 	from = ( bud ) ? bud->full_jid : xt_find_attr( node, "from" );
 
@@ -383,42 +383,37 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 		imcb_chat_topic( chat, bud ? bud->bare_jid : NULL, subject->text_len > 0 ?
 		                 subject->text : NULL, jabber_get_timestamp( node ) );
 	}
-	
-	if( bud == NULL || ( jc && ~jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me ) )
+
+	if( body == NULL || body->text_len == 0 )
+		/* Meh. Empty messages aren't very interesting, no matter
+		   how much some servers love to send them. */
+		return;
+
+	if( chat == NULL && ( bud == NULL || ( jc && ~jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me ) ) )
 	{
-		if( body == NULL || body->text_len == 0 )
-			/* Meh. Empty messages aren't very interesting, no matter
-			   how much some servers love to send them. */
-			return;
-		
 		if( nick == NULL )
 		{
-			/* This is fine, the groupchat itself isn't in jd->buddies. */
-			if( chat )
-				imcb_chat_log( chat, "From conference server: %s", body->text );
-			else
-				imcb_log( ic, "System message from unknown groupchat %s: %s", from, body->text );
+			imcb_log( ic, "System message from unknown groupchat %s: %s", from, body->text );
 		}
 		else
 		{
-			/* This can happen too, at least when receiving a backlog when
-			   just joining a channel. */
-			if( chat )
-				imcb_chat_log( chat, "Message from unknown participant %s: %s", nick, body->text );
-			else
-				imcb_log( ic, "Groupchat message from unknown JID %s: %s", from, body->text );
+			imcb_log( ic, "Groupchat message from unknown JID %s: %s", from, body->text );
 		}
 		
 		return;
 	}
-	else if( chat == NULL )
+	else if( chat != NULL && bud == NULL && nick == NULL )
 	{
-		/* How could this happen?? We could do kill( self, 11 )
-		   now or just wait for the OS to do it. :-) */
+		imcb_chat_log( chat, "From conference server: %s", body->text );
 		return;
 	}
-	if( body && body->text_len > 0 )
-	{
-		imcb_chat_msg( chat, bud->bare_jid, body->text, 0, jabber_get_timestamp( node ) );
+
+	if ( bud && bud != jc->me ) {
+		/* exclude self-messages since they would get filtered out. sigh. */
+		final_from = bud->bare_jid;
+	} else {
+		final_from = nick;
 	}
+
+	imcb_chat_msg( chat, final_from , body->text, 0, jabber_get_timestamp( node ) );
 }
