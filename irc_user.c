@@ -248,6 +248,11 @@ const struct irc_user_funcs irc_user_root_funcs = {
 	root_ctcp,
 };
 
+const struct irc_user_funcs irc_user_null_funcs = {
+	NULL,
+	NULL,
+};
+
 /* Echo to yourself: */
 static gboolean self_privmsg( irc_user_t *iu, const char *msg )
 {

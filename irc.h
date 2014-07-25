@@ -146,6 +146,7 @@ struct irc_user_funcs
 
 extern const struct irc_user_funcs irc_user_root_funcs;
 extern const struct irc_user_funcs irc_user_self_funcs;
+extern const struct irc_user_funcs irc_user_null_funcs;
 
 typedef enum
 {

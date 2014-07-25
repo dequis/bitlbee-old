@@ -84,6 +84,7 @@ void imcb_chat_msg( struct groupchat *c, const char *who, char *msg, uint32_t fl
 	struct im_connection *ic = c->ic;
 	bee_t *bee = ic->bee;
 	bee_user_t *bu;
+	char *final_msg = NULL;
 	char *s;
 	
 	/* Gaim sends own messages through this too. IRC doesn't want this, so kill them */
@@ -96,11 +97,16 @@ void imcb_chat_msg( struct groupchat *c, const char *who, char *msg, uint32_t fl
 	if( ( g_strcasecmp( s, "always" ) == 0 ) ||
 	    ( ( ic->flags & OPT_DOES_HTML ) && s ) )
 		strip_html( msg );
+
+	if (!bee->ui->chat_msg)
+		return;
+
+	if( !bu )
+		msg = final_msg = g_strdup_printf( "<%s> %s", who, msg );
 	
-	if( bu && bee->ui->chat_msg )
-		bee->ui->chat_msg( bee, c, bu, msg, sent_at );
-	else
-		imcb_chat_log( c, "Message from unknown participant %s: %s", who, msg );
+	bee->ui->chat_msg( bee, c, bu, msg, sent_at );
+
+	g_free( final_msg );
 }
 
 void imcb_chat_log( struct groupchat *c, char *format, ... )

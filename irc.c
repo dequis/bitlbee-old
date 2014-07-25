@@ -146,6 +146,11 @@ irc_t *irc_new( int fd )
 	iu->host = g_strdup( myhost );
 	iu->fullname = g_strdup( ROOT_FN );
 	iu->f = &irc_user_root_funcs;
+
+	iu = irc_user_new( irc, UNKNOWN_NICK );
+	iu->host = g_strdup( myhost );
+	iu->fullname = g_strdup( UNKNOWN_FULLNAME );
+	iu->f = &irc_user_null_funcs;
 	
 	irc->user = g_new0( irc_user_t, 1 );
 	irc->user->host = g_strdup( host );
