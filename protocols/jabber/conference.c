@@ -396,8 +396,12 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 
 	if( subject && chat )
 	{
-		imcb_chat_topic( chat, bud ? bud->bare_jid : NULL, subject->text_len > 0 ?
-		                 subject->text : NULL, jabber_get_timestamp( node ) );
+		char *subject_text = subject->text_len > 0 ? subject->text : NULL;
+		if ( g_strcmp0(chat->topic, subject_text) != 0 )
+		{
+			imcb_chat_topic( chat, bud ? bud->bare_jid : NULL, subject_text,
+			                 jabber_get_timestamp( node ) );
+		}
 	}
 
 	if( body == NULL || body->text_len == 0 )
