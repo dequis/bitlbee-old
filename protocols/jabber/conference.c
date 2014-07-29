@@ -377,7 +377,23 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 	}
 
 	jc = ( chat ) ? chat->data : NULL;
-	
+
+	if ( !bud ) {
+		struct xt_node *c;
+		char *s;
+
+		/* Try some clever stuff to find out the real JID here */
+		c = xt_find_node_by_attr( node->children, "delay", "xmlns", XMLNS_DELAY );
+		
+		if ( c && ( ( s = xt_find_attr( c, "from" ) ) ||
+		            ( s = xt_find_attr( c, "from_jid" ) ) ) )
+		{
+			/* Hopefully this one makes more sense! */
+			bud = jabber_buddy_by_jid( ic, s, GET_BUDDY_FIRST | GET_BUDDY_CREAT );
+		}
+
+	}
+
 	if( subject && chat )
 	{
 		imcb_chat_topic( chat, bud ? bud->bare_jid : NULL, subject->text_len > 0 ?
