@@ -27,6 +27,7 @@
 static xt_status jabber_parse_roster( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 static xt_status jabber_iq_display_vcard( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 static xt_status jabber_parse_hipchat_profile( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
+static xt_status jabber_parse_muc_list( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 
 xt_status jabber_pkt_iq( struct xt_node *node, gpointer data )
 {
@@ -463,6 +464,81 @@ static xt_status jabber_parse_roster( struct im_connection *ic, struct xt_node *
 		imcb_connected( ic );
 	
 	return XT_HANDLED;
+}
+
+int jabber_iq_disco_muc( struct im_connection *ic, char *muc_server )
+{
+	struct xt_node *node;
+	int st;
+	
+	imcb_log( ic, "Fetching MUC list" );
+	
+	node = xt_new_node( "query", NULL, NULL );
+	xt_add_attr( node, "xmlns", XMLNS_DISCO_ITEMS );
+	node = jabber_make_packet( "iq", "get", muc_server, node );
+	
+	jabber_cache_add( ic, node, jabber_parse_muc_list );
+	st = jabber_write_packet( ic, node );
+	
+	return st;
+}
+
+static xt_status jabber_parse_muc_list( struct im_connection *ic, struct xt_node *node, struct xt_node *orig )
+{
+	struct xt_node *query, *c;
+	
+	if( !( query = xt_find_node( node->children, "query" ) ) )
+	{
+		imcb_log( ic, "Warning: Received NULL MUC list packet" );
+		return XT_HANDLED;
+	}
+	
+	c = query->children;
+	while( ( c = xt_find_node( c, "item" ) ) )
+	{
+		struct xt_node *c2;
+		struct groupchat *gc;
+		struct irc_channel *ircc;
+		char *participants = NULL;
+		char *topic = NULL;
+		char *jid = xt_find_attr( c, "jid" );
+		char *name = xt_find_attr( c, "name" );
+		imcb_log( ic, "Channel: %s - '%s'", jid, name );
+
+		c2 = xt_find_node_by_attr( c->children, "x", "xmlns", XMLNS_HIPCHAT_MUC );
+
+		if( c2 ) {
+			struct xt_node *node;
+			if ( ( node = xt_find_node( c2->children, "num_participants" ) ) ) {
+				participants = node->text;
+			}
+			if ( ( node = xt_find_node( c2->children, "topic" ) ) ) {
+				topic = node->text;
+			}
+			imcb_log( ic, "Participants: %s", participants );
+			imcb_log( ic, "Topic: %s", topic );
+		}
+
+		gc = bee_chat_by_title(ic->bee, ic, jid);
+		if ( !gc ) {
+			gc = imcb_chat_new(ic, jid);
+		}
+		imcb_chat_name_hint(gc, name);
+		imcb_chat_topic(gc, NULL, topic, 0);
+
+		ircc = gc->ui_data;
+		set_setstr( &ircc->set, "account", ic->acc->tag );
+		set_setstr( &ircc->set, "room", jid );
+		set_setstr( &ircc->set, "chat_type", "room" );
+
+		/* This cleans everything but leaves the irc channel around,
+		 * since it just graduated to a room.*/
+		imcb_chat_free( gc );
+
+		c = c->next;
+	}
+	return XT_HANDLED;
+
 }
 
 int jabber_get_vcard( struct im_connection *ic, char *bare_jid )

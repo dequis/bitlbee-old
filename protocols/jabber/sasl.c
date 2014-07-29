@@ -425,9 +425,10 @@ silent_error:
 static xt_status hipchat_handle_success( struct im_connection *ic, struct xt_node *node )
 {
 	struct jabber_data *jd = ic->proto_data;
-	char *sep, *jid;
+	char *sep, *jid, *muc_host;
 
 	jid = xt_find_attr( node, "jid" );
+	muc_host = xt_find_attr( node, "muc_host" );
 
 	sep = strchr( jid, '/' );
 	if( sep )
@@ -447,6 +448,8 @@ static xt_status hipchat_handle_success( struct im_connection *ic, struct xt_nod
 	if( !jabber_iq_disco_server( ic ) )
 		return XT_ABORT;
 	if( !jabber_get_hipchat_profile( ic ) )
+		return XT_ABORT;
+	if( !jabber_iq_disco_muc( ic, muc_host ) )
 		return XT_ABORT;
 
 	return XT_HANDLED;

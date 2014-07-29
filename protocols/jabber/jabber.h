@@ -263,6 +263,7 @@ struct jabber_transfer
 /* Hipchat protocol extensions*/
 #define XMLNS_HIPCHAT         "http://hipchat.com"
 #define XMLNS_HIPCHAT_PROFILE "http://hipchat.com/protocol/profile"
+#define XMLNS_HIPCHAT_MUC     "http://hipchat.com/protocol/muc#room"
 
 /* jabber.c */
 void jabber_connect( struct im_connection *ic );
@@ -274,6 +275,7 @@ xt_status jabber_pkt_bind_sess( struct im_connection *ic, struct xt_node *node, 
 int jabber_get_roster( struct im_connection *ic );
 int jabber_get_vcard( struct im_connection *ic, char *bare_jid );
 int jabber_get_hipchat_profile( struct im_connection *ic );
+int jabber_iq_disco_muc( struct im_connection *ic, char *muc_server );
 int jabber_add_to_roster( struct im_connection *ic, const char *handle, const char *name, const char *group );
 int jabber_remove_from_roster( struct im_connection *ic, char *handle );
 xt_status jabber_iq_query_features( struct im_connection *ic, char *bare_jid );
