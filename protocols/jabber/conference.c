@@ -356,8 +356,10 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 	struct xt_node *subject = xt_find_node( node->children, "subject" );
 	struct xt_node *body = xt_find_node( node->children, "body" );
 	struct groupchat *chat = NULL;
-	struct jabber_chat *jc;
-	char *from, *nick, *final_from;
+	struct jabber_chat *jc = NULL;
+	char *from = NULL;
+	char *nick = NULL;
+	char *final_from = NULL;
 
 	from = ( bud ) ? bud->full_jid : xt_find_attr( node, "from" );
 
@@ -409,7 +411,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 		   how much some servers love to send them. */
 		return;
 
-	if( chat == NULL && ( bud == NULL || ( jc && ~jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me ) ) )
+	if( chat == NULL || ( bud == NULL || ( jc && ~jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me ) ) )
 	{
 		if( nick == NULL )
 		{
@@ -428,7 +430,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 		return;
 	}
 
-	if ( bud && bud != jc->me ) {
+	if ( bud && jc && bud != jc->me ) {
 		/* exclude self-messages since they would get filtered out. sigh. */
 		final_from = bud->bare_jid;
 	} else {
