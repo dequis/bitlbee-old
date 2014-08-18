@@ -360,6 +360,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 	char *from = NULL;
 	char *nick = NULL;
 	char *final_from = NULL;
+	char *bare_jid = NULL;
 
 	from = ( bud ) ? bud->full_jid : xt_find_attr( node, "from" );
 
@@ -401,8 +402,10 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 		char *subject_text = subject->text_len > 0 ? subject->text : NULL;
 		if ( g_strcmp0(chat->topic, subject_text) != 0 )
 		{
-			imcb_chat_topic( chat, bud ? bud->bare_jid : NULL, subject_text,
+			bare_jid = ( bud ) ? jabber_get_bare_jid( bud->ext_jid ) : NULL;
+			imcb_chat_topic( chat, bare_jid, subject_text,
 			                 jabber_get_timestamp( node ) );
+			g_free( bare_jid );
 		}
 	}
 
@@ -411,7 +414,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 		   how much some servers love to send them. */
 		return;
 
-	if( chat == NULL || ( bud == NULL || ( jc && ~jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me ) ) )
+	if( chat == NULL )
 	{
 		if( nick == NULL )
 		{
@@ -429,13 +432,21 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 		imcb_chat_log( chat, "From conference server: %s", body->text );
 		return;
 	}
+	else if ( jc && jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me )
+	{
+		/* exclude self-messages since they would get filtered out
+		 * but not the ones in the backlog */
+		return;
+	}
 
 	if ( bud && jc && bud != jc->me ) {
-		/* exclude self-messages since they would get filtered out. sigh. */
-		final_from = bud->bare_jid;
+		bare_jid = jabber_get_bare_jid( bud->ext_jid );
+		final_from = bare_jid;
 	} else {
 		final_from = nick;
 	}
 
-	imcb_chat_msg( chat, final_from , body->text, 0, jabber_get_timestamp( node ) );
+	imcb_chat_msg( chat, final_from, body->text, 0, jabber_get_timestamp( node ) );
+
+	g_free( bare_jid );
 }
