@@ -88,7 +88,7 @@ void imcb_chat_msg( struct groupchat *c, const char *who, char *msg, uint32_t fl
 	char *s;
 	
 	/* Gaim sends own messages through this too. IRC doesn't want this, so kill them */
-	if( g_strcasecmp( who, ic->acc->user ) == 0 )
+	if( account_is_handle( ic->acc, who ) )
 		return;
 	
 	bu = bee_user_by_handle( bee, ic, who );
@@ -138,7 +138,7 @@ void imcb_chat_topic( struct groupchat *c, char *who, char *topic, time_t set_at
 	
 	if( who == NULL)
 		bu = NULL;
-	else if( g_strcasecmp( who, ic->acc->user ) == 0 )
+	else if( account_is_handle( ic->acc, who ) )
 		bu = bee->user;
 	else
 		bu = bee_user_by_handle( bee, ic, who );
@@ -160,7 +160,7 @@ void imcb_chat_add_buddy( struct groupchat *c, const char *handle )
 	if( set_getbool( &c->ic->bee->set, "debug" ) )
 		imcb_log( c->ic, "User %s added to conversation %p", handle, c );
 	
-	me = ic->acc->prpl->handle_cmp( handle, ic->acc->user ) == 0;
+	me = account_is_handle( ic->acc, handle );
 	
 	/* Most protocols allow people to join, even when they're not in
 	   your contact list. Try to handle that here */
@@ -188,7 +188,7 @@ void imcb_chat_remove_buddy( struct groupchat *c, const char *handle, const char
 		imcb_log( ic, "User %s removed from conversation %p (%s)", handle, c, reason ? reason : "" );
 	
 	/* It might be yourself! */
-	if( g_strcasecmp( handle, ic->acc->user ) == 0 )
+	if( account_is_handle( ic->acc, handle ) )
 	{
 		if( c->joined == 0 )
 			return;

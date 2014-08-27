@@ -482,3 +482,10 @@ int protocol_account_islocal( const char* protocol )
 	} while( *( ++p ) );
 	return 0;
 }
+
+gboolean account_is_handle( account_t *acc, const char *handle )
+{
+	return ( ( acc->prpl->handle_cmp( handle, acc->user ) == 0 ) ||
+	         ( acc->user_internal &&
+		   acc->prpl->handle_cmp( handle, acc->user_internal ) == 0 ) );
+}
