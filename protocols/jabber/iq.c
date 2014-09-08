@@ -498,24 +498,24 @@ static xt_status jabber_parse_muc_list( struct im_connection *ic, struct xt_node
 		struct xt_node *c2;
 		struct groupchat *gc;
 		struct irc_channel *ircc;
-		char *participants = NULL;
+		//char *participants = NULL;
 		char *topic = NULL;
 		char *jid = xt_find_attr( c, "jid" );
 		char *name = xt_find_attr( c, "name" );
-		imcb_log( ic, "Channel: %s - '%s'", jid, name );
+		imcb_log( ic, "Debug: adding MUC to channel list: %s - '%s'", jid, name );
 
 		c2 = xt_find_node_by_attr( c->children, "x", "xmlns", XMLNS_HIPCHAT_MUC );
 
 		if( c2 ) {
 			struct xt_node *node;
+			/*
 			if ( ( node = xt_find_node( c2->children, "num_participants" ) ) ) {
 				participants = node->text;
 			}
+			*/
 			if ( ( node = xt_find_node( c2->children, "topic" ) ) ) {
 				topic = node->text;
 			}
-			imcb_log( ic, "Participants: %s", participants );
-			imcb_log( ic, "Topic: %s", topic );
 		}
 
 		gc = bee_chat_by_title(ic->bee, ic, jid);
