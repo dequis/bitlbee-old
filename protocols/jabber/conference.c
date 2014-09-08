@@ -392,7 +392,7 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 		            ( s = xt_find_attr( c, "from_jid" ) ) ) )
 		{
 			/* This won't be useful if it's the MUC JID */
-			if ( !jabber_compare_jid( s, jc->name ) )
+			if ( ! ( jc && jabber_compare_jid( s, jc->name ) ) )
 			{
 				/* Hopefully this one makes more sense! */
 				bud = jabber_buddy_by_jid( ic, s, GET_BUDDY_FIRST | GET_BUDDY_CREAT );
