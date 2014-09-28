@@ -5,7 +5,7 @@ endif
 
 all:
 	# Only build the docs if this is a bzr checkout
-	test -d ../.bzr -o ../.git && $(MAKE) -C user-guide
+	test ! '(' -d ../.git -o -d ../.bzr ')' || $(MAKE) -C user-guide
 
 install:
 	mkdir -p $(DESTDIR)$(MANDIR)/man8/ $(DESTDIR)$(MANDIR)/man5/
