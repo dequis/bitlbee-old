@@ -47,6 +47,9 @@ typedef enum
 	JFLAG_XMLCONSOLE = 64,          /* If the user added an xmlconsole buddy. */
 	JFLAG_STARTTLS_DONE = 128,      /* If a plaintext session was converted to TLS. */
 
+	JFLAG_CARBONS_SUPPORT = 256,    /* If server supports XEP-0280. */
+	JFLAG_CARBONS_ENABLED = 512,    /* If server supports XEP-0280. */
+
 	JFLAG_GTALK =  0x100000,        /* Is Google Talk, as confirmed by iq discovery */
 
 	JFLAG_SASL_FB = 0x10000,        /* Trying Facebook authentication. */
@@ -231,6 +234,8 @@ struct jabber_transfer
 #define XMLNS_DELAY_OLD    "jabber:x:delay"                                      /* XEP-0091 */
 #define XMLNS_DELAY        "urn:xmpp:delay"                                      /* XEP-0203 */
 #define XMLNS_XDATA        "jabber:x:data"                                       /* XEP-0004 */
+#define XMLNS_CARBONS      "urn:xmpp:carbons:2"                                  /* XEP-0280 */
+#define XMLNS_FORWARDING   "urn:xmpp:forward:0"                                  /* XEP-0297 */
 #define XMLNS_CHATSTATES   "http://jabber.org/protocol/chatstates"               /* XEP-0085 */
 #define XMLNS_DISCO_INFO   "http://jabber.org/protocol/disco#info"               /* XEP-0030 */
 #define XMLNS_DISCO_ITEMS  "http://jabber.org/protocol/disco#items"              /* XEP-0030 */

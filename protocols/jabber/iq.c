@@ -27,6 +27,7 @@
 static xt_status jabber_parse_roster( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 static xt_status jabber_iq_display_vcard( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 static int jabber_iq_disco_server( struct im_connection *ic );
+static int jabber_iq_carbons( struct im_connection *ic, gboolean enable );
 
 xt_status jabber_pkt_iq( struct xt_node *node, gpointer data )
 {
@@ -131,6 +132,7 @@ xt_status jabber_pkt_iq( struct xt_node *node, gpointer data )
 			                           XMLNS_SI,
 			                           XMLNS_BYTESTREAMS,
 			                           XMLNS_FILETRANSFER,
+			                           XMLNS_CARBONS,
 			                           NULL };
 			const char **f;
 			
@@ -913,21 +915,114 @@ static xt_status jabber_iq_disco_server_response( struct im_connection *ic,
 	struct xt_node *node, struct xt_node *orig )
 {
 	struct jabber_data *jd = ic->proto_data;
-	struct xt_node *id;
+	struct xt_node *query, *c;
 	
-	if( ( id = xt_find_path( node, "query/identity" ) ) )
+	if( !( query = xt_find_node( node->children, "query" ) ) )
+	{
+		imcb_log( ic, "Warning: Received NULL discovery packet" );
+		return XT_HANDLED;
+	}
+	
+	/* Check if server is gtalk */
+	for( c = query->children; ( c = xt_find_node( c, "identity" ) ); c = c->next )
 	{
 		char *cat, *type, *name;
 		
-		if( !( cat = xt_find_attr( id, "category" ) ) ||
-		    !( type = xt_find_attr( id, "type" ) ) ||
-		    !( name = xt_find_attr( id, "name" ) ) )
-			return XT_HANDLED;
+		if( !( cat = xt_find_attr( c, "category" ) ) ||
+		    !( type = xt_find_attr( c, "type" ) ) ||
+		    !( name = xt_find_attr( c, "name" ) ) )
+			continue;
 		
 		if( strcmp( cat, "server" ) == 0 && strcmp( type, "im" ) == 0 &&
 		    strstr( name, "Google" ) != NULL )
 			jd->flags |= JFLAG_GTALK;
 	}
 	
+	/* Check if server supports xmpp carbons */
+	for( c = query->children; ( c = xt_find_node( c, "feature" ) ); c = c->next )
+	{
+		char *var;
+		
+		if( !(var = xt_find_attr( c, "var" ) ) )
+		{
+			imcb_log( ic, "Warning: Nameless feature in discovery packet" );
+			continue;
+		}
+		
+		if( strcmp ( var, XMLNS_CARBONS ) == 0 )
+			jd->flags |= JFLAG_CARBONS_SUPPORT;
+	}
+	
+	if( jd->flags & JFLAG_CARBONS_SUPPORT ) {
+		imcb_log( ic, "Supports Carbons (XEP-0280), enabling" );
+		jabber_iq_carbons( ic, TRUE );
+	}
+	
+	return XT_HANDLED;
+}
+
+static xt_status jabber_iq_carbons_response( struct im_connection *ic,
+		struct xt_node *node, struct xt_node *orig );
+
+static int jabber_iq_carbons( struct im_connection *ic, gboolean enable )
+{
+	struct xt_node *node, *iq;
+	char *action;
+
+	if( enable )
+		action = "enable";
+	else
+		action = "disable";
+
+	node = xt_new_node( action, NULL, NULL );
+	xt_add_attr( node, "xmlns", XMLNS_CARBONS );
+	iq = jabber_make_packet( "iq", "set", NULL, node );
+
+	jabber_cache_add( ic, iq, jabber_iq_carbons_response );
+	return jabber_write_packet( ic, iq );
+}
+
+static xt_status jabber_iq_carbons_response( struct im_connection *ic,
+		struct xt_node *node, struct xt_node *orig )
+{
+	struct jabber_data *jd = ic->proto_data;
+	char *type;
+	gboolean orig_enable;
+
+	if( !( type = xt_find_attr( node, "type" ) ) )
+	{
+		imcb_log( ic, "Warning: Received incomplete Carbons IQ response" );
+		return XT_HANDLED;
+	}
+
+	if( strcmp( orig->children->name, "enable" ) == 0 )
+		orig_enable = TRUE;
+	else if( strcmp( orig->children->name, "disable" ) == 0 )
+		orig_enable = FALSE;
+	else
+	{
+		imcb_log( ic, "Error: Corrupt cached Carbons IQ response" );
+		return XT_HANDLED;
+	}
+
+	if( strcmp( type, "error" ) == 0 )
+	{
+		struct xt_node *error;
+		char *reason = "unknown error";
+		if( ( error = xt_find_path(node, "error") ) )
+			if( error->children && error->children->name )
+				reason = error->children->name;
+		imcb_error( ic, "Server error in response to Carbons %s request: %s",
+				orig->children->name, reason );
+	}
+	else if( strcmp( type, "result" ) == 0 )
+	{
+		imcb_log( ic, "XMPP Carbons %sd", orig->children->name );
+		if( orig_enable)
+			jd->flags |= JFLAG_CARBONS_ENABLED;
+		else
+			jd->flags &= ~JFLAG_CARBONS_ENABLED;
+	}
+
 	return XT_HANDLED;
 }

@@ -265,7 +265,7 @@ void imcb_buddy_msg( struct im_connection *ic, const char *handle, char *msg, ui
 	}
 	
 	if( bee->ui->user_msg && bu )
-		bee->ui->user_msg( bee, bu, msg, sent_at );
+		bee->ui->user_msg( bee, bu, msg, sent_at, flags );
 	else
 		imcb_log( ic, "Message from unknown handle %s:\n%s", handle, msg );
 }
