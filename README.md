@@ -33,10 +33,11 @@ package you're clearly not evil enough.
  * MS Comic chat\*
  * No selinux\*
  * Arch Linux support
+ * American english support
 
 _* Might not be implemented natively yet_
 
-Features unique to this fork:
+Interesting features unique to this fork:
 
  * None (probably. check commit logs)
 

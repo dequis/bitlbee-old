@@ -1,6 +1,8 @@
 language: c
-script: "./configure && make check"
+script: dpkg-buildpackage
 before_install:
  - sudo apt-get update -qq
- - sudo apt-get install --no-install-recommends -qq asciidoc xsltproc xmlto lynx check
+ - sudo apt-get install --no-install-recommends -qq asciidoc xsltproc xmlto lynx check libevent-dev libpurple-dev
+ - wget http://ftp.us.debian.org/debian/pool/main/libo/libotr/libotr5{,-dev}_4.0.0-2.2~bpo70+1_amd64.deb
+ - sudo dpkg -i *.deb
 

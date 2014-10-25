@@ -9,19 +9,11 @@
 -include Makefile.settings
 
 # Program variables
-objects = bitlbee.o dcc.o help.o ipc.o irc.o irc_im.o irc_channel.o irc_commands.o irc_send.o irc_user.o irc_util.o nick.o $(OTR_BI) query.o root_commands.o set.o storage.o $(STORAGE_OBJS)
-headers = bitlbee.h commands.h conf.h config.h help.h ipc.h irc.h log.h nick.h query.h set.h sock.h storage.h lib/events.h lib/ftutil.h lib/http_client.h lib/ini.h lib/json.h lib/json_util.h lib/md5.h lib/misc.h lib/proxy.h lib/sha1.h lib/ssl_client.h lib/url.h protocols/account.h protocols/bee.h protocols/ft.h protocols/nogaim.h
+objects = bitlbee.o dcc.o help.o ipc.o irc.o irc_im.o irc_channel.o irc_commands.o irc_send.o irc_user.o irc_util.o nick.o $(OTR_BI) query.o root_commands.o set.o storage.o $(STORAGE_OBJS) unix.o conf.o log.o
+headers = $(wildcard $(_SRCDIR_)*.h $(_SRCDIR_)lib/*.h $(_SRCDIR_)protocols/*.h)
 subdirs = lib protocols
 
-ifeq ($(TARGET),i586-mingw32msvc)
-objects += win32.o
-LFLAGS+=-lws2_32
-EFLAGS+=-lsecur32
-OUTFILE=bitlbee.exe
-else
-objects += unix.o conf.o log.o
-OUTFILE=bitlbee
-endif
+OUTFILE = bitlbee
 
 # Expansion of variables
 subdirobjs = $(foreach dir,$(subdirs),$(dir)/$(dir).o)
@@ -101,7 +93,7 @@ uninstall-bin:
 install-dev:
 	mkdir -p $(DESTDIR)$(INCLUDEDIR)
 	$(INSTALL) -m 0644 config.h $(DESTDIR)$(INCLUDEDIR)
-	for i in $(headers); do $(INSTALL) -m 0644 $(_SRCDIR_)$$i $(DESTDIR)$(INCLUDEDIR); done
+	for i in $(headers); do $(INSTALL) -m 0644 $$i $(DESTDIR)$(INCLUDEDIR); done
 	mkdir -p $(DESTDIR)$(PCDIR)
 	$(INSTALL) -m 0644 bitlbee.pc $(DESTDIR)$(PCDIR)
 
@@ -146,16 +138,14 @@ ifdef SYSTEMDSYSTEMUNITDIR
 	sed 's|@sbindir@|$(SBINDIR)|' $(_SRCDIR_)init/bitlbee@.service.in > init/bitlbee@.service
 endif
 
-install-systemd:
+install-systemd: systemd
 ifdef SYSTEMDSYSTEMUNITDIR
-ifeq ($(shell id -u),0)
 	mkdir -p $(DESTDIR)$(SYSTEMDSYSTEMUNITDIR)
 	$(INSTALL) -m 0644 init/bitlbee.service $(DESTDIR)$(SYSTEMDSYSTEMUNITDIR)
 	$(INSTALL) -m 0644 init/bitlbee@.service $(DESTDIR)$(SYSTEMDSYSTEMUNITDIR)
 	$(INSTALL) -m 0644 $(_SRCDIR_)init/bitlbee.socket $(DESTDIR)$(SYSTEMDSYSTEMUNITDIR)
 else
-	@echo Not root, so not installing systemd files.
-endif
+	@echo SYSTEMDSYSTEMUNITDIR not set, not installing systemd unit files.
 endif
 
 tar:
@@ -173,7 +163,7 @@ $(OTR_PI): %.so: $(_SRCDIR_)%.c
 
 $(SKYPE_PI): $(_SRCDIR_)protocols/skype/skype.c
 	@echo '*' Building plugin skype
-	@$(CC) $(CFLAGS) $(SKYPEFLAGS) $< -o $@
+	@$(CC) $(CFLAGS) $(LDFLAGS) $(SKYPEFLAGS) $< -o $@
 
 $(objects): %.o: $(_SRCDIR_)%.c
 	@echo '*' Compiling $<
@@ -183,7 +173,7 @@ $(objects): Makefile Makefile.settings config.h
 
 $(OUTFILE): $(objects) $(subdirs)
 	@echo '*' Linking $(OUTFILE)
-	@$(CC) $(objects) $(subdirobjs) -o $(OUTFILE) $(LDFLAGS_BITLBEE) $(LFLAGS) $(EFLAGS)
+	@$(CC) $(objects) $(subdirobjs) -o $(OUTFILE) $(LDFLAGS_BITLBEE) $(LDFLAGS) $(EFLAGS)
 ifndef DEBUG
 	@echo '*' Stripping $(OUTFILE)
 	@-$(STRIP) $(OUTFILE)

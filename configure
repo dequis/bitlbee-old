@@ -212,6 +212,8 @@ if [ "$pie" = "1" ]; then
 	echo 'LDFLAGS_BITLBEE=-pie' >> Makefile.settings
 fi
 
+echo LDFLAGS=$LDFLAGS >> Makefile.settings
+
 echo CFLAGS=$CFLAGS $CPPFLAGS >> Makefile.settings
 echo CFLAGS+=-I${srcdir} -I${srcdir}/lib -I${srcdir}/protocols -I. >> Makefile.settings
 
@@ -481,8 +483,6 @@ elif [ "$ssl" = "gnutls" ]; then
 	detect_gnutls
 elif [ "$ssl" = "nss" ]; then
 	detect_nss
-elif [ "$ssl" = "sspi" ]; then
-	echo
 elif [ "$ssl" = "openssl" ]; then
 	echo
 	echo 'No detection code exists for OpenSSL. Make sure that you have a complete'
@@ -605,7 +605,7 @@ fi
 if [ "$otr" = 1 ]; then
 	# BI == built-in
 	echo '#define OTR_BI' >> config.h
-	echo "EFLAGS+=-L${otrprefix}/lib -lotr" >> Makefile.settings
+	echo "EFLAGS+=-L${otrprefix}/lib -lotr -lgcrypt" >> Makefile.settings
 	echo "CFLAGS+=-I${otrprefix}/include" >> Makefile.settings
 	echo 'OTR_BI=otr.o' >> Makefile.settings
 elif [ "$otr" = "plugin" ]; then
@@ -809,9 +809,9 @@ AIX )
 	echo 'EFLAGS+=-Wl,-brtl' >> Makefile.settings
 ;;
 CYGWIN* )
-	echo 'Cygwin is not officially supported.'
 ;;
 Windows )
+	echo 'Native windows compilation is not supported anymore, use cygwin instead.'
 ;;
 * )
 	echo 'We haven'\''t tested BitlBee on many platforms yet, yours is untested. YMMV.'
