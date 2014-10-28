@@ -224,7 +224,9 @@ static const struct irc_plugin otr_plugin;
 
 void init_plugin(void)
 {
-	OTRL_INIT;
+	if(otrl_init(4, 0, 0)) {
+		exit(1);
+	}
 	
 	/* fill global OtrlMessageAppOps */
 	otr_ops.policy = &op_policy;
