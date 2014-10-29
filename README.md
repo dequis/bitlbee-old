@@ -3,6 +3,7 @@
 ![](http://i.imgur.com/DSsES4E.png)
 
 [![Build Status](https://travis-ci.org/dequis/bitlbee.svg?branch=wip%2Ftravis)](https://travis-ci.org/dequis/bitlbee)
+[![Coverity Scan Build Status](https://scan.coverity.com/projects/3287/badge.svg)](https://scan.coverity.com/projects/3287)
 
 This is an evil fork of BitlBee, using the evil platform known as 'github'.
 
@@ -41,6 +42,23 @@ Interesting features unique to this fork:
 
  * None (probably. check commit logs)
 
+## Pull requests
+
+Pull requests to this repository are used for code review - often for my own
+branches.
+
+Feel free to submit pull requests to this repository, and once they pass the
+review here, I'll do my best to get them merged upstream.
+
+## Workflow notes
+
+There used to be notes on my git/bzr workflow here - I've moved them here:
+
+<http://wiki.dequis.org/notes/git_bzr_workflow>
+
+One important note: I reserve the right of rebasing develop to clean up this
+mess to match upstream at some point. This will only happen if I consider that
+the benefits outweigh the inconveniences it may cause - so it's unlikely.
 
 [git-remote-bzr]: https://github.com/felipec/git-remote-bzr
 [html]: http://bzr.dequis.org/revmap/fancy.html
