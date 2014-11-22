@@ -79,9 +79,11 @@
 #define TWITTER_REPORT_SPAM_URL "/users/report_spam.json"
 
 #define TWITTER_USER_STREAM_URL "https://userstream.twitter.com/1.1/user.json"
+#define TWITTER_FILTER_STREAM_URL "https://stream.twitter.com/1.1/statuses/filter.json"
 
 gboolean twitter_open_stream(struct im_connection *ic);
 gboolean twitter_get_timeline(struct im_connection *ic, gint64 next_cursor);
+void twitter_tracking_stream(struct im_connection *ic);
 void twitter_get_friends_ids(struct im_connection *ic, gint64 next_cursor);
 void twitter_get_statuses_friends(struct im_connection *ic, gint64 next_cursor);
 
@@ -92,6 +94,14 @@ void twitter_status_destroy(struct im_connection *ic, guint64 id);
 void twitter_status_retweet(struct im_connection *ic, guint64 id);
 void twitter_report_spam(struct im_connection *ic, char *screen_name);
 void twitter_favourite_tweet(struct im_connection *ic, guint64 id);
+
+#if (!GLIB_CHECK_VERSION(2,28,0))
+void g_slist_free_full(GSList *list, GDestroyNotify free_func);
+#endif
+
+#if (!GLIB_CHECK_VERSION(2,34,0))
+GSList *g_slist_copy_deep(GSList *list, GCopyFunc func, gpointer user_data);
+#endif
 
 #endif //_TWITTER_LIB_H
 
