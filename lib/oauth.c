@@ -5,19 +5,19 @@
 *                                                                           *
 *  Copyright 2010 Wilmer van der Gaast <wilmer@gaast.net>                   *
 *                                                                           *
-*  This library is free software; you can redistribute it and/or            *
-*  modify it under the terms of the GNU Lesser General Public               *
-*  License as published by the Free Software Foundation, version            *
-*  2.1.                                                                     *
+*  This program is free software; you can redistribute it and/or modify     *
+*  it under the terms of the GNU General Public License as published by     *
+*  the Free Software Foundation; either version 2 of the License, or        *
+*  (at your option) any later version.                                      *
 *                                                                           *
-*  This library is distributed in the hope that it will be useful,          *
+*  This program is distributed in the hope that it will be useful,          *
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of           *
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU        *
-*  Lesser General Public License for more details.                          *
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the            *
+*  GNU General Public License for more details.                             *
 *                                                                           *
-*  You should have received a copy of the GNU Lesser General Public License *
-*  along with this library; if not, write to the Free Software Foundation,  *
-*  Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA           *
+*  You should have received a copy of the GNU General Public License along  *
+*  with this program; if not, write to the Free Software Foundation, Inc.,  *
+*  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.              *
 *                                                                           *
 \***************************************************************************/
 
@@ -75,13 +75,8 @@ static char *oauth_sign( const char *method, const char *url,
 static char *oauth_nonce()
 {
 	unsigned char bytes[21];
-	char *ret = g_new0( char, sizeof( bytes) / 3 * 4 + 1 );
-	
 	random_bytes( bytes, sizeof( bytes ) );
-	base64_encode_real( bytes, sizeof( bytes), (unsigned char*) ret, "0123456789"
-	                    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0A" );
-	
-	return ret;
+	return base64_encode( bytes, sizeof( bytes ) );
 }
 
 void oauth_params_add( GSList **params, const char *key, const char *value )
