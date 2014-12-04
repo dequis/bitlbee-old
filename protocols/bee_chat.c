@@ -87,11 +87,12 @@ void imcb_chat_msg( struct groupchat *c, const char *who, char *msg, uint32_t fl
 	char *final_msg = NULL;
 	char *s;
 	
-	/* Gaim sends own messages through this too. IRC doesn't want this, so kill them */
-	if( account_is_handle( ic->acc, who ) )
-		return;
-	
-	bu = bee_user_by_handle( bee, ic, who );
+	if( account_is_handle( ic->acc, who ) ) {
+		/* FIXME: Awful hack for self messages please don't hate */
+		bu = (bee_user_t *) -1;
+	} else {
+		bu = bee_user_by_handle( bee, ic, who );
+	}
 	
 	s = set_getstr( &ic->bee->set, "strip_html" );
 	if( ( g_strcasecmp( s, "always" ) == 0 ) ||
