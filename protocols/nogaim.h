@@ -69,6 +69,7 @@
 #define OPT_NOOTR       0x00001000 /* protocol not suitable for OTR */
 #define OPT_PONGS       0x00010000 /* Service sends us keep-alives */
 #define OPT_PONGED      0x00020000 /* Received a keep-alive during last interval */
+#define OPT_SPECIAL     0x00040000 /* Denotes a user as being special */
 
 /* ok. now the fun begins. first we create a connection structure */
 struct im_connection
