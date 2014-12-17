@@ -118,9 +118,6 @@ extern "C" {
 
 #define NS_NICK "NickServ"
 
-#define UNKNOWN_NICK "[unknown]"
-#define UNKNOWN_FULLNAME "Message from unknown participant"
-
 #define DEFAULT_AWAY "Away from computer"
 #define CONTROL_TOPIC "Welcome to the control channel. Type \2help\2 for help information."
 #define IRCD_INFO PACKAGE " <http://www.bitlbee.org/>"

@@ -647,8 +647,6 @@ static gboolean bee_irc_chat_msg( bee_t *bee, struct groupchat *c, bee_user_t *b
 		} else {
 			iu = bu->ui_data;
 		}
-	} else {
-		iu = irc_user_by_name( irc, UNKNOWN_NICK );
 	}
 	
 	if( sent_at > 0 && set_getbool( &bee->set, "display_timestamps" ) )
