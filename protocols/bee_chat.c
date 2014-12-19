@@ -87,16 +87,15 @@ void imcb_chat_msg( struct groupchat *c, const char *who, char *msg, uint32_t fl
 	gboolean temp;
 	char *s;
 	
-	if( account_is_handle( ic->acc, who ) ) {
-		/* FIXME: Awful hack for self messages please don't hate */
-		bu = (bee_user_t *) -1;
-	} else {
-		bu = bee_user_by_handle( bee, ic, who );
-		temp = ( bu == NULL );
-		
-		if( temp )
-			bu = bee_user_new( bee, ic, who, BEE_USER_ONLINE );
-	}
+	/* Gaim sends own messages through this too. IRC doesn't want this, so kill them */
+	if( account_is_handle( ic->acc, who ) )
+		return;
+	
+	bu = bee_user_by_handle( bee, ic, who );
+	temp = ( bu == NULL );
+	
+	if( temp )
+		bu = bee_user_new( bee, ic, who, BEE_USER_ONLINE );
 	
 	s = set_getstr( &ic->bee->set, "strip_html" );
 	if( ( g_strcasecmp( s, "always" ) == 0 ) ||

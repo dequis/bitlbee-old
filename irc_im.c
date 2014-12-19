@@ -633,21 +633,12 @@ static gboolean bee_irc_chat_log( bee_t *bee, struct groupchat *c, const char *t
 static gboolean bee_irc_chat_msg( bee_t *bee, struct groupchat *c, bee_user_t *bu, const char *msg, time_t sent_at )
 {
 	irc_t *irc = bee->ui_data;
+	irc_user_t *iu = bu->ui_data;
 	irc_channel_t *ic = c->ui_data;
-	irc_user_t *iu;
 	char *wrapped, *ts = NULL;
-
+	
 	if( ic == NULL )
 		return FALSE;
-
-	if( bu ) {
-		/* FIXME: Awful hack for self messages please don't hate */
-		if ( ((int) bu) == -1 ) {
-			iu = irc->user;
-		} else {
-			iu = bu->ui_data;
-		}
-	}
 	
 	if( sent_at > 0 && set_getbool( &bee->set, "display_timestamps" ) )
 		ts = irc_format_timestamp( irc, sent_at );

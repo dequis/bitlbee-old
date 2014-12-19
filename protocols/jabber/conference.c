@@ -25,7 +25,6 @@
 #include "sha1.h"
 
 static xt_status jabber_chat_join_failed( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
-static xt_status jabber_chat_self_message( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 
 struct groupchat *jabber_chat_join( struct im_connection *ic, const char *room, const char *nick, const char *password )
 {
@@ -126,12 +125,6 @@ static xt_status jabber_chat_join_failed( struct im_connection *ic, struct xt_no
 	return XT_HANDLED;
 }
 
-static xt_status jabber_chat_self_message( struct im_connection *ic, struct xt_node *node, struct xt_node *orig )
-{
-	/* This is a self message sent by this bitlbee - just drop it */
-	return XT_ABORT;
-}
-
 struct groupchat *jabber_chat_by_jid( struct im_connection *ic, const char *name )
 {
 	char *normalized = jabber_normalize( name );
@@ -176,9 +169,14 @@ int jabber_chat_msg( struct groupchat *c, char *message, int flags )
 	node = xt_new_node( "body", message, NULL );
 	node = jabber_make_packet( "message", "groupchat", jc->name, node );
 	
-	jabber_cache_add( ic, node, jabber_chat_self_message );
-
-	return !jabber_write_packet( ic, node );
+	if( !jabber_write_packet( ic, node ) )
+	{
+		xt_free_node( node );
+		return 0;
+	}
+	xt_free_node( node );
+	
+	return 1;
 }
 
 int jabber_chat_topic( struct groupchat *c, char *topic )
@@ -440,13 +438,12 @@ void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud
 	}
 	else if ( jc && jc->flags & JCFLAG_MESSAGE_SENT && bud == jc->me )
 	{
-		if ( jabber_cache_handle_packet( ic, node ) == XT_ABORT ) {
-			/* Self message marked by this bitlbee, don't show it */
-			return;
-		}
+		/* exclude self-messages since they would get filtered out
+		 * but not the ones in the backlog */
+		return;
 	}
 
-	if ( bud ) {
+	if ( bud && jc && bud != jc->me ) {
 		bare_jid = jabber_get_bare_jid( bud->ext_jid ? bud->ext_jid : bud->full_jid );
 		final_from = bare_jid;
 	} else {
