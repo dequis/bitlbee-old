@@ -162,7 +162,7 @@ void strip_html( char *in )
 	
 	while( *in )
 	{
-		if( *in == '<' && ( isalpha( *(in+1) ) || *(in+1) == '/' ) )
+		if( *in == '<' && ( isalpha( (unsigned char)*(in+1) ) || *(in+1) == '/' ) )
 		{
 			/* If in points at a < and in+1 points at a letter or a slash, this is probably
 			   a HTML-tag. Try to find a closing > and continue there. If the > can't be
@@ -197,7 +197,7 @@ void strip_html( char *in )
 		else if( *in == '&' )
 		{
 			cs = ++in;
-			while( *in && isalpha( *in ) )
+			while( *in && isalpha( (unsigned char)*in ) )
 				in ++;
 			
 			if( *in == ';' ) in ++;
@@ -489,7 +489,7 @@ int is_bool( char *value )
 		return 1;
 	
 	while( *value )
-		if( !isdigit( *value ) )
+		if( !isdigit( (unsigned char)*value ) )
 			return 0;
 		else
 			value ++;

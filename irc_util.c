@@ -41,9 +41,9 @@ char *set_eval_timezone( set_t *set, char *value )
 		s ++;
 	
 	/* \d+ */
-	if( !isdigit( *s ) )
+	if( !isdigit( (unsigned char)*s ) )
 		return SET_INVALID;
-	while( *s && isdigit( *s ) ) s ++;
+	while( *s && isdigit( (unsigned char)*s ) ) s ++;
 	
 	/* EOS? */
 	if( *s == '\0' )
@@ -55,9 +55,9 @@ char *set_eval_timezone( set_t *set, char *value )
 	s ++;
 	
 	/* \d+ */
-	if( !isdigit( *s ) )
+	if( !isdigit( (unsigned char)*s ) )
 		return SET_INVALID;
-	while( *s && isdigit( *s ) ) s ++;
+	while( *s && isdigit( (unsigned char)*s ) ) s ++;
 	
 	/* EOS */
 	return *s == '\0' ? value : SET_INVALID;
