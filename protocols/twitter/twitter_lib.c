@@ -999,8 +999,6 @@ static void twitter_get_home_timeline(struct im_connection *ic, gint64 next_curs
 	td->home_timeline_obj = NULL;
 	td->flags &= ~TWITTER_GOT_TIMELINE;
 
-	char *last_tweet = set_getstr(&ic->acc->set, "last_tweet");
-
 	char *args[6];
 	args[0] = "cursor";
 	args[1] = g_strdup_printf("%lld", (long long) next_cursor);
@@ -1008,11 +1006,7 @@ static void twitter_get_home_timeline(struct im_connection *ic, gint64 next_curs
 	args[3] = "true";
 	if (td->timeline_id) {
 		args[4] = "since_id";
-		if(last_tweet) {
-			args[5] = g_strdup_printf("%s", last_tweet);
-		} else {
-			args[5] = g_strdup_printf("%llu", (long long unsigned int) td->timeline_id);
-		}
+		args[5] = g_strdup_printf("%" G_GUINT64_FORMAT, td->timeline_id);
 	}
 
 	if (twitter_http(ic, TWITTER_HOME_TIMELINE_URL, twitter_http_get_home_timeline, ic, 0, args,
