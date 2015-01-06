@@ -720,6 +720,7 @@ static void twitter_status_show_msg(struct im_connection *ic, struct twitter_xml
 static void twitter_status_show(struct im_connection *ic, struct twitter_xml_status *status)
 {
 	struct twitter_data *td = ic->proto_data;
+	char *last_id_str;
 	
 	if (status->user == NULL || status->text == NULL)
 		return;
@@ -737,6 +738,10 @@ static void twitter_status_show(struct im_connection *ic, struct twitter_xml_sta
 	// Update the timeline_id to hold the highest id, so that by the next request
 	// we won't pick up the updates already in the list.
 	td->timeline_id = MAX(td->timeline_id, status->rt_id);
+
+	last_id_str = g_strdup_printf("%" G_GUINT64_FORMAT, td->timeline_id);
+	set_setstr(&ic->acc->set, "last_tweet", last_id_str);
+	g_free(last_id_str);
 }
 
 static gboolean twitter_stream_handle_object(struct im_connection *ic, json_value *o);
@@ -935,7 +940,6 @@ void twitter_flush_timeline(struct im_connection *ic)
 	struct twitter_xml_list *home_timeline = td->home_timeline_obj;
 	struct twitter_xml_list *mentions = td->mentions_obj;
 	guint64 last_id = 0;
-	char *last_id_str;
 	GSList *output = NULL;
 	GSList *l;
 
@@ -973,10 +977,6 @@ void twitter_flush_timeline(struct im_connection *ic)
 		last_id = txs->id;
 		output = g_slist_remove(output, txs);
 	}
-
-	last_id_str = g_strdup_printf("%" G_GUINT64_FORMAT, last_id);
-	set_setstr(&ic->acc->set, "last_tweet", last_id_str);
-	g_free(last_id_str);
 
 	txl_free(home_timeline);
 	txl_free(mentions);
