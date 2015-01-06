@@ -251,10 +251,12 @@ void nick_dedupe( bee_user_t *bu, char nick[MAX_NICK_LENGTH+1] )
 		}
 		else
 		{
+			/* We've got no more space for underscores,
+			   so truncate it and replace the last three
+			   chars with a random "_XX" suffix */
 			int len = truncate_utf8( nick, MAX_NICK_LENGTH - 3 );
 			nick[len] = '_';
-			nick[len + 3] = '#';
-			g_snprintf(nick + len + 1, 2, "%2x", rand() );
+			g_snprintf(nick + len + 1, 3, "%2x", rand() );
 		}
 		
 		if( inf_protection-- == 0 )
