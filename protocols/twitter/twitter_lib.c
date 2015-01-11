@@ -625,22 +625,22 @@ static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int repl
 		}
 		c++; // Move past the %
 		switch (*c) {
-		case 'i':
-			g_string_append_printf(text, "%02x", log_id);
-			break;
-		case 'r':
-			if (reply_to != -1) // In case someone does put %r in the wrong format_string
-			g_string_append_printf(text, "%02x", reply_to);
-			break;
-		case 't':
-			if (txs->rt) // In case someone does put %t in the wrong format_string
-				text = g_string_append(text, txs->rt->user->screen_name);
-			break;
-		case 'c':
-			text = g_string_append(text, txs->text);
-			break;
-		default:
-			text = g_string_append_c(text, *c);
+			case 'i':
+				g_string_append_printf(text, "%02x", log_id);
+				break;
+			case 'r':
+				if (reply_to != -1) // In case someone does put %r in the wrong format_string
+				g_string_append_printf(text, "%02x", reply_to);
+				break;
+			case 't':
+				if (txs->rt) // In case someone does put %t in the wrong format_string
+					text = g_string_append(text, txs->rt->user->screen_name);
+				break;
+			case 'c':
+				text = g_string_append(text, txs->text);
+				break;
+			default:
+				text = g_string_append_c(text, *c);
 		}
 	}
 	text = g_string_prepend(text, prefix);
