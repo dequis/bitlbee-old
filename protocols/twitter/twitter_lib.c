@@ -606,9 +606,9 @@ static gboolean twitter_xt_get_status_list(struct im_connection *ic, const json_
 
 static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int reply_to,
 				struct twitter_xml_status *txs, const char *prefix) {
-	gchar * format = set_getstr(&ic->acc->set, "twitter_format_string");
-	gchar * rt_format = set_getstr(&ic->acc->set, "twitter_retweet_format_string");
-	gchar * reply_format = set_getstr(&ic->acc->set, "twitter_reply_format_string");
+	gchar * format = set_getstr(&ic->acc->set, "format_string");
+	gchar * rt_format = set_getstr(&ic->acc->set, "retweet_format_string");
+	gchar * reply_format = set_getstr(&ic->acc->set, "reply_format_string");
 
 	GString * rt = g_string_new(NULL);
 	GString * reply = g_string_new(NULL);
