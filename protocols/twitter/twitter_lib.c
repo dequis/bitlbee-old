@@ -610,44 +610,13 @@ static gboolean twitter_xt_get_status_list(struct im_connection *ic, const json_
 static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int reply_to,
 				struct twitter_xml_status *txs, const char *prefix) {
 	gchar * format = set_getstr(&ic->acc->set, "format_string");
-	gchar * rt_format = set_getstr(&ic->acc->set, "retweet_format_string");
-	gchar * reply_format = set_getstr(&ic->acc->set, "reply_format_string");
-
-	GString * rt = NULL;
-	GString * reply = NULL;
 	GString * text = g_string_new(NULL);
 
 	gchar *c;
-	if (txs->rt) {
-		rt = g_string_new(NULL);
-		for (c = rt_format; *c; c++) {
-			if (!(*c == '%' && *(c+1))) {
-				rt = g_string_append_c(rt, *c);
-				continue;
-			}
-			c++; // Move past the %
-			if (*c == 'a')
-				rt = g_string_append(rt, txs->rt->user->screen_name);
-			else
-				rt = g_string_append_c(rt, *c);
-		}
-	}
-
-	if (reply_to != -1) {
-		reply = g_string_new(NULL);
-		for (c = reply_format; *c; c++) {
-			if (!(*c == '%' && *(c+1))) {
-				reply = g_string_append_c(reply, *c);
-				continue;
-			}
-			c++; // Move past the %
-			if (*c == 'i') {
-				g_string_append_printf(reply, "%02x", reply_to);
-			} else {
-				reply = g_string_append_c(reply, *c);
-			}
-		}
-	}
+	if (reply_to != -1)
+		format = set_getstr(&ic->acc->set, "reply_format_string");
+	if (txs->rt)
+		format = set_getstr(&ic->acc->set, "retweet_format_string");
 
 	for (c = format; *c ; c++) {
 		if (!(*c == '%' && *(c+1))) {
@@ -660,10 +629,12 @@ static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int repl
 			g_string_append_printf(text, "%02x", log_id);
 			break;
 		case 'r':
-			text = g_string_append(text, reply ? reply->str : "");
+			if (reply_to != -1) // In case someone does put %r in the wrong format_string
+			g_string_append_printf(text, "%02x", reply_to);
 			break;
 		case 't':
-			text = g_string_append(text, rt ? rt->str : "");
+			if (txs->rt) // In case someone does put %t in the wrong format_string
+				text = g_string_append(text, txs->rt->user->screen_name);
 			break;
 		case 'c':
 			text = g_string_append(text, txs->text);
@@ -672,16 +643,8 @@ static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int repl
 			text = g_string_append_c(text, *c);
 		}
 	}
-	gchar *ret;
-	if (*prefix)
-		ret = g_strconcat(prefix, text->str, NULL);
-	else
-		ret = g_strdup(text->str);
-
-	if (reply) g_string_free(reply, TRUE);
-	if (rt) g_string_free(rt, TRUE);
-	g_string_free(text, TRUE);
-	return ret;
+	text = g_string_prepend(text, prefix);
+	return g_string_free(text, FALSE);
 }
 
 /* Will log messages either way. Need to keep track of IDs for stream deduping.
