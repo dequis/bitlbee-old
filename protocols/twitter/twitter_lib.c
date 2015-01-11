@@ -604,77 +604,73 @@ static gboolean twitter_xt_get_status_list(struct im_connection *ic, const json_
 	return TRUE;
 }
 
+/**
+ * Function to properly format a tweet as per the users configuration.
+ */
 static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int reply_to,
 				struct twitter_xml_status *txs, const char *prefix) {
 	gchar * format = set_getstr(&ic->acc->set, "format_string");
 	gchar * rt_format = set_getstr(&ic->acc->set, "retweet_format_string");
 	gchar * reply_format = set_getstr(&ic->acc->set, "reply_format_string");
 
-	GString * rt = g_string_new(NULL);
-	GString * reply = g_string_new(NULL);
+	GString * rt = NULL;
+	GString * reply = NULL;
 	GString * text = g_string_new(NULL);
+
+	gchar *c;
 	if (txs->rt) {
-		gchar * c = rt_format;
-		while (*c) {
-			if (*c == '%' && *(c+1)) {
-				if (*(c+1) == 'a')
-					rt = g_string_append(rt, txs->rt->user->screen_name);
-				else
-					rt = g_string_append_c(rt, *c);
-				c++; // Move past the %
-			} else {
+		rt = g_string_new(NULL);
+		for (c = rt_format; *c; c++) {
+			if (!(*c == '%' && *(c+1))) {
 				rt = g_string_append_c(rt, *c);
+				continue;
 			}
-			c++;
+			c++; // Move past the %
+			if (*c == 'a')
+				rt = g_string_append(rt, txs->rt->user->screen_name);
+			else
+				rt = g_string_append_c(rt, *c);
 		}
 	}
 
 	if (reply_to != -1) {
-		gchar * c = reply_format;
-		while (*c) {
-			if (*c == '%' && *(c+1)) {
-				if (*(c+1) == 'i') {
-					gchar *id = g_strdup_printf("%02x", reply_to);
-					reply = g_string_append(reply, id);
-					g_free(id);
-				} else {
-					reply = g_string_append_c(reply, *c);
-				}
-				c++; // Move past the %
+		reply = g_string_new(NULL);
+		for (c = reply_format; *c; c++) {
+			if (!(*c == '%' && *(c+1))) {
+				reply = g_string_append_c(reply, *c);
+				continue;
+			}
+			c++; // Move past the %
+			if (*c == 'i') {
+				g_string_append_printf(reply, "%02x", reply_to);
 			} else {
 				reply = g_string_append_c(reply, *c);
 			}
-			c++;
 		}
 	}
 
-	gchar * c = format;
-	while (*c) {
-		if (*c == '%' && *(c+1)) {
-			c++; // Move past %
-			switch (*c) {
-				case 'i': ; // Extra semi-colon avoids compiler error
-				            // "declaration after label"
-					gchar * id = g_strdup_printf("%02x", log_id);
-					text = g_string_append(text, id);
-					g_free(id);
-					break;
-				case 'r':
-					text = g_string_append(text, reply->str);
-					break;
-				case 't':
-					text = g_string_append(text, rt->str);
-					break;
-				case 'c':
-					text = g_string_append(text, txs->text);
-					break;
-				default:
-					text = g_string_append_c(text, *c);
-			}
-		} else {
+	for (c = format; *c ; c++) {
+		if (!(*c == '%' && *(c+1))) {
+			text = g_string_append_c(text, *c);
+			continue;
+		}
+		c++; // Move past the %
+		switch (*c) {
+		case 'i':
+			g_string_append_printf(text, "%02x", log_id);
+			break;
+		case 'r':
+			text = g_string_append(text, reply ? reply->str : "");
+			break;
+		case 't':
+			text = g_string_append(text, rt ? rt->str : "");
+			break;
+		case 'c':
+			text = g_string_append(text, txs->text);
+			break;
+		default:
 			text = g_string_append_c(text, *c);
 		}
-		c++;
 	}
 	gchar *ret;
 	if (*prefix)
@@ -682,8 +678,8 @@ static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int repl
 	else
 		ret = g_strdup(text->str);
 
-	g_string_free(reply, TRUE);
-	g_string_free(rt, TRUE);
+	if (reply) g_string_free(reply, TRUE);
+	if (rt) g_string_free(rt, TRUE);
 	g_string_free(text, TRUE);
 	return ret;
 }
