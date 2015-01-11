@@ -60,6 +60,7 @@ struct twitter_xml_status {
 	struct twitter_xml_user *user;
 	guint64 id, rt_id; /* Usually equal, with RTs id == *original* id */
 	guint64 reply_to;
+	struct twitter_xml_status *rt;
 };
 
 /**
@@ -85,6 +86,7 @@ static void txs_free(struct twitter_xml_status *txs)
 
 	g_free(txs->text);
 	txu_free(txs->user);
+	g_free(txs->rt);
 	g_free(txs);
 }
 
@@ -482,9 +484,9 @@ static struct twitter_xml_status *twitter_xt_get_status(const json_value *node)
 		struct twitter_xml_status *rtxs = twitter_xt_get_status(rt);
 		if (rtxs) {
 			g_free(txs->text);
-			txs->text = g_strdup_printf("RT @%s: %s", rtxs->user->screen_name, rtxs->text);
+			txs->text = g_strdup(rtxs->text);
 			txs->id = rtxs->id;
-			txs_free(rtxs);
+			txs->rt = rtxs;
 		}
 	} else if (entities) {
 		txs->text = expand_entities(txs->text, entities);
@@ -602,6 +604,90 @@ static gboolean twitter_xt_get_status_list(struct im_connection *ic, const json_
 	return TRUE;
 }
 
+static char *twitter_msg_get_text(struct im_connection *ic, int log_id, int reply_to,
+				struct twitter_xml_status *txs, const char *prefix) {
+	gchar * format = set_getstr(&ic->acc->set, "twitter_format_string");
+	gchar * rt_format = set_getstr(&ic->acc->set, "twitter_retweet_format_string");
+	gchar * reply_format = set_getstr(&ic->acc->set, "twitter_reply_format_string");
+
+	GString * rt = g_string_new(NULL);
+	GString * reply = g_string_new(NULL);
+	GString * text = g_string_new(NULL);
+	if (txs->rt) {
+		gchar * c = rt_format;
+		while (*c) {
+			if (*c == '%' && *(c+1)) {
+				if (*(c+1) == 'a')
+					rt = g_string_append(rt, txs->rt->user->screen_name);
+				else
+					rt = g_string_append_c(rt, *c);
+				c++; // Move past the %
+			} else {
+				rt = g_string_append_c(rt, *c);
+			}
+			c++;
+		}
+	}
+
+	if (reply_to != -1) {
+		gchar * c = reply_format;
+		while (*c) {
+			if (*c == '%' && *(c+1)) {
+				if (*(c+1) == 'i') {
+					gchar *id = g_strdup_printf("%02x", reply_to);
+					reply = g_string_append(reply, id);
+					g_free(id);
+				} else {
+					reply = g_string_append_c(reply, *c);
+				}
+				c++; // Move past the %
+			} else {
+				reply = g_string_append_c(reply, *c);
+			}
+			c++;
+		}
+	}
+
+	gchar * c = format;
+	while (*c) {
+		if (*c == '%' && *(c+1)) {
+			c++; // Move past %
+			switch (*c) {
+				case 'i': ; // Extra semi-colon avoids compiler error
+				            // "declaration after label"
+					gchar * id = g_strdup_printf("%02x", log_id);
+					text = g_string_append(text, id);
+					g_free(id);
+					break;
+				case 'r':
+					text = g_string_append(text, reply->str);
+					break;
+				case 't':
+					text = g_string_append(text, rt->str);
+					break;
+				case 'c':
+					text = g_string_append(text, txs->text);
+					break;
+				default:
+					text = g_string_append_c(text, *c);
+			}
+		} else {
+			text = g_string_append_c(text, *c);
+		}
+		c++;
+	}
+	gchar *ret;
+	if (*prefix)
+		ret = g_strconcat(prefix, text->str, NULL);
+	else
+		ret = g_strdup(text->str);
+
+	g_string_free(reply, TRUE);
+	g_string_free(rt, TRUE);
+	g_string_free(text, TRUE);
+	return ret;
+}
+
 /* Will log messages either way. Need to keep track of IDs for stream deduping.
    Plus, show_ids is on by default and I don't see why anyone would disable it. */
 static char *twitter_msg_add_id(struct im_connection *ic,
@@ -640,19 +726,7 @@ static char *twitter_msg_add_id(struct im_connection *ic,
 	if (g_strcasecmp(txs->user->screen_name, td->user) == 0)
 		td->log[td->log_id].id = txs->rt_id;
 	
-	if (set_getbool(&ic->acc->set, "show_ids")) {
-		if (reply_to != -1)
-			return g_strdup_printf("\002[\002%02x->%02x\002]\002 %s%s",
-			                       td->log_id, reply_to, prefix, txs->text);
-		else
-			return g_strdup_printf("\002[\002%02x\002]\002 %s%s",
-			                       td->log_id, prefix, txs->text);
-	} else {
-		if (*prefix)
-			return g_strconcat(prefix, txs->text, NULL);
-		else
-			return NULL;
-	}
+  return twitter_msg_get_text(ic, td->log_id, reply_to, txs, prefix);
 }
 
 /**

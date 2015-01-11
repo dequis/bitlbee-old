@@ -329,6 +329,10 @@ static void twitter_init(account_t * acc)
 	s = set_add(&acc->set, "show_old_mentions", "0", set_eval_int, acc);
 
 	s = set_add(&acc->set, "strip_newlines", "false", set_eval_bool, acc);
+
+	s = set_add(&acc->set, "twitter_format_string", "\002[\002%i%r\002]\002 %t%c", NULL, acc);
+	s = set_add(&acc->set, "twitter_retweet_format_string", "RT %a: ", NULL, acc);
+	s = set_add(&acc->set, "twitter_reply_format_string", "->%i", NULL, acc);
 	
 	s = set_add(&acc->set, "last_tweet", "0", NULL, acc);
 	s->flags |= SET_HIDDEN;
