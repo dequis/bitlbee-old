@@ -50,6 +50,10 @@ static void twitter_main_loop_start(struct im_connection *ic)
 {
 	struct twitter_data *td = ic->proto_data;
 
+	char *last_tweet = set_getstr(&ic->acc->set, "last_tweet");
+	if (last_tweet)
+		td->timeline_id = g_ascii_strtoull(last_tweet, NULL, 0);
+
 	/* Create the room now that we "logged in". */
 	if (td->flags & TWITTER_MODE_CHAT)
 		twitter_groupchat_init(ic);
@@ -326,6 +330,9 @@ static void twitter_init(account_t * acc)
 
 	s = set_add(&acc->set, "strip_newlines", "false", set_eval_bool, acc);
 	
+	s = set_add(&acc->set, "last_tweet", "0", NULL, acc);
+	s->flags |= SET_HIDDEN;
+
 	if (strcmp(acc->prpl->name, "twitter") == 0) {
 		s = set_add(&acc->set, "stream", "true", set_eval_bool, acc);
 		s->flags |= ACC_SET_OFFLINE_ONLY;
@@ -458,9 +465,9 @@ static int twitter_buddy_msg(struct im_connection *ic, char *who, char *message,
 			char pin[strlen(message) + 1], *s;
 
 			strcpy(pin, message);
-			for (s = pin + sizeof(pin) - 2; s > pin && isspace(*s); s--)
+			for (s = pin + sizeof(pin) - 2; s > pin && g_ascii_isspace(*s); s--)
 				*s = '\0';
-			for (s = pin; *s && isspace(*s); s++) {
+			for (s = pin; *s && g_ascii_isspace(*s); s++) {
 			}
 
 			if (!oauth_access_token(s, td->oauth_info)) {

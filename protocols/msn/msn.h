@@ -19,8 +19,8 @@
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in /usr/share/common-licenses/GPL;
-  if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  if not, write to the Free Software Foundation, Inc., 51 Franklin St.,
+  Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #ifndef _MSN_H
@@ -45,7 +45,7 @@
 */
 
 #define MSN_NS_HOST "messenger.hotmail.com"
-#define MSN_NS_PORT 1863
+#define MSN_NS_PORT "1863"
 
 /* Some other version.
 #define MSNP11_PROD_KEY "O4BG@C7BWLYQX?5G"

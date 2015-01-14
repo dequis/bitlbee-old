@@ -19,8 +19,8 @@
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in /usr/share/common-licenses/GPL;
-  if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  if not, write to the Free Software Foundation, Inc., 51 Franklin St.,
+  Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "nogaim.h"
@@ -40,6 +40,12 @@ static void msn_init( account_t *acc )
 	s = set_add( &acc->set, "display_name", NULL, set_eval_display_name, acc );
 	s->flags |= SET_NOSAVE | ACC_SET_ONLINE_ONLY;
 	
+	s = set_add( &acc->set, "server", MSN_NS_HOST, set_eval_account, acc );
+	s->flags |= SET_NOSAVE | ACC_SET_OFFLINE_ONLY;
+
+	s = set_add( &acc->set, "port", MSN_NS_PORT, set_eval_int, acc );
+	s->flags |= ACC_SET_OFFLINE_ONLY;
+
 	set_add( &acc->set, "mail_notifications", "false", set_eval_bool, acc );
 	set_add( &acc->set, "switchboard_keepalives", "false", set_eval_bool, acc );
 	
@@ -70,7 +76,9 @@ static void msn_login( account_t *acc )
 	msn_connections = g_slist_prepend( msn_connections, ic );
 	
 	imcb_log( ic, "Connecting" );
-	msn_ns_connect( ic, md->ns, MSN_NS_HOST, MSN_NS_PORT );
+	msn_ns_connect( ic, md->ns,
+	                set_getstr( &ic->acc->set, "server" ),
+	                set_getint( &ic->acc->set, "port" ) );
 }
 
 static void msn_logout( struct im_connection *ic )
@@ -368,7 +376,7 @@ static void msn_buddy_data_add( bee_user_t *bu )
 	bd = bu->data = g_new0( struct msn_buddy_data, 1 );
 	g_tree_insert( md->domaintree, bu->handle, bu );
 	
-	for( handle = bu->handle; isdigit( *handle ); handle ++ );
+	for( handle = bu->handle; g_ascii_isdigit( *handle ); handle ++ );
 	if( *handle == ':' )
 	{
 		/* Pass a nick hint so hopefully the stupid numeric prefix

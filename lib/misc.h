@@ -19,8 +19,8 @@
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in /usr/share/common-licenses/GPL;
-  if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  if not, write to the Free Software Foundation, Inc., 51 Franklin St.,
+  Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #ifndef _MISC_H
@@ -149,5 +149,6 @@ G_MODULE_EXPORT gboolean ssl_sockerr_again( void *ssl );
 G_MODULE_EXPORT int md5_verify_password( char *password, char *hash );
 G_MODULE_EXPORT char **split_command_parts( char *command, int limit );
 G_MODULE_EXPORT char *get_rfc822_header( const char *text, const char *header, int len );
+G_MODULE_EXPORT int truncate_utf8( char *string, int maxlen );
 
 #endif

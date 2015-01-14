@@ -19,8 +19,8 @@
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in /usr/share/common-licenses/GPL;
-  if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  if not, write to the Free Software Foundation, Inc., 51 Franklin St.,
+  Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #define BITLBEE_CORE
@@ -40,7 +40,7 @@ static char *clean_handle( const char *orig )
 	
 	do {
 		if (*orig != ' ')
-			new[i++] = tolower( *orig );
+			new[i++] = g_ascii_tolower( *orig );
 	}
 	while (*(orig++));
 	
@@ -143,11 +143,11 @@ char *nick_gen( bee_user_t *bu )
 				}
 				fmt += 2;
 			}
-			else if( isdigit( *fmt ) )
+			else if( g_ascii_isdigit( *fmt ) )
 			{
 				len = 0;
 				/* Grab a number. */
-				while( isdigit( *fmt ) )
+				while( g_ascii_isdigit( *fmt ) )
 					len = len * 10 + ( *(fmt++) - '0' );
 			}
 			else if( g_strncasecmp( fmt, "nick", 4 ) == 0 )
@@ -226,7 +226,7 @@ char *nick_gen( bee_user_t *bu )
 	if( ok && rets && *rets )
 	{
 		nick_strip( irc, rets );
-		rets[MAX_NICK_LENGTH] = '\0';
+		truncate_utf8( rets, MAX_NICK_LENGTH );
 		return rets;
 	}
 	g_free( rets );
@@ -251,7 +251,12 @@ void nick_dedupe( bee_user_t *bu, char nick[MAX_NICK_LENGTH+1] )
 		}
 		else
 		{
-			nick[0] ++;
+			/* We've got no more space for underscores,
+			   so truncate it and replace the last three
+			   chars with a random "_XX" suffix */
+			int len = truncate_utf8( nick, MAX_NICK_LENGTH - 3 );
+			nick[len] = '_';
+			g_snprintf(nick + len + 1, 3, "%2x", rand() );
 		}
 		
 		if( inf_protection-- == 0 )
@@ -330,7 +335,7 @@ void nick_strip( irc_t *irc, char *nick )
 			}
 		}
 	}
-	if( isdigit( nick[0] ) )
+	if( g_ascii_isdigit( nick[0] ) )
 	{
 		char *orig;
 		
@@ -350,7 +355,7 @@ gboolean nick_ok( irc_t *irc, const char *nick )
 	const char *s;
 	
 	/* Empty/long nicks are not allowed, nor numbers at [0] */
-	if( !*nick || isdigit( nick[0] ) || strlen( nick ) > MAX_NICK_LENGTH )
+	if( !*nick || g_ascii_isdigit( nick[0] ) || strlen( nick ) > MAX_NICK_LENGTH )
 		return 0;
 	
 	if( irc && ( irc->status & IRC_UTF8_NICKS ) )
@@ -399,8 +404,7 @@ int nick_lc( irc_t *irc, char *nick )
 		gchar *down = g_utf8_strdown( nick, -1 );
 		if( strlen( down ) > strlen( nick ) )
 		{
-			/* Well crap. Corrupt it if we have to. */
-			down[strlen(nick)] = '\0';
+			truncate_utf8( down, strlen(nick) );
 		}
 		strcpy( nick, down );
 		g_free( down );
