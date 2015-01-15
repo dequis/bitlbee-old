@@ -422,39 +422,6 @@ silent_error:
 	return ret;
 }
 
-static xt_status hipchat_handle_success( struct im_connection *ic, struct xt_node *node )
-{
-	struct jabber_data *jd = ic->proto_data;
-	char *sep, *jid, *muc_host;
-
-	jid = xt_find_attr( node, "jid" );
-	muc_host = xt_find_attr( node, "muc_host" );
-
-	sep = strchr( jid, '/' );
-	if( sep )
-		*sep = '\0';
-
-	jabber_set_me( ic, jid );
-	imcb_log( ic, "Setting Hipchat JID to %s", jid );
-
-	if ( sep )
-		*sep = '/';
-
-	/* Hipchat's auth doesn't expect a restart here */
-	jd->flags &= ~JFLAG_STREAM_RESTART;
-
-	if( !jabber_get_roster( ic ) )
-		return XT_ABORT;
-	if( !jabber_iq_disco_server( ic ) )
-		return XT_ABORT;
-	if( !jabber_get_hipchat_profile( ic ) )
-		return XT_ABORT;
-	if( !jabber_iq_disco_muc( ic, muc_host ) )
-		return XT_ABORT;
-
-	return XT_HANDLED;
-}
-
 xt_status sasl_pkt_result( struct xt_node *node, gpointer data )
 {
 	struct im_connection *ic = data;

@@ -274,7 +274,6 @@ int jabber_init_iq_auth( struct im_connection *ic );
 xt_status jabber_pkt_bind_sess( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 int jabber_get_roster( struct im_connection *ic );
 int jabber_get_vcard( struct im_connection *ic, char *bare_jid );
-int jabber_get_hipchat_profile( struct im_connection *ic );
 int jabber_iq_disco_muc( struct im_connection *ic, char *muc_server );
 int jabber_add_to_roster( struct im_connection *ic, const char *handle, const char *name, const char *group );
 int jabber_remove_from_roster( struct im_connection *ic, char *handle );
@@ -376,5 +375,11 @@ int jabber_chat_leave( struct groupchat *c, const char *reason );
 void jabber_chat_pkt_presence( struct im_connection *ic, struct jabber_buddy *bud, struct xt_node *node );
 void jabber_chat_pkt_message( struct im_connection *ic, struct jabber_buddy *bud, struct xt_node *node );
 void jabber_chat_invite( struct groupchat *c, char *who, char *message );
+
+/* hipchat.c */
+int jabber_get_hipchat_profile( struct im_connection *ic );
+xt_status jabber_parse_hipchat_profile( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
+xt_status hipchat_handle_success( struct im_connection *ic, struct xt_node *node );
+xt_status jabber_parse_muc_list( struct im_connection *ic, struct xt_node *node, struct xt_node *orig );
 
 #endif
