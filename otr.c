@@ -35,8 +35,8 @@
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in /usr/share/common-licenses/GPL;
-  if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  if not, write to the Free Software Foundation, Inc., 51 Franklin St.,
+  Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "bitlbee.h"
@@ -1116,29 +1116,20 @@ void cmd_otr_info(irc_t *irc, char **args)
 
 void cmd_otr_keygen(irc_t *irc, char **args)
 {
-	int i, n;
 	account_t *a;
 	
-	n = atoi(args[1]);
-	if(n<0 || (!n && strcmp(args[1], "0"))) {
-		irc_rootmsg(irc, "%s: invalid account number", args[1]);
-		return;
-	}
-	
-	a = irc->b->accounts;
-	for(i=0; i<n && a; i++, a=a->next);
-	if(!a) {
-		irc_rootmsg(irc, "%s: no such account", args[1]);
+	if ((a = account_get(irc->b, args[1])) == NULL) {
+		irc_rootmsg(irc, "Could not find account `%s'.", args[1]);
 		return;
 	}
 	
 	if(keygen_in_progress(irc, a->user, a->prpl->name)) {
-		irc_rootmsg(irc, "keygen for account %d already in progress", n);
+		irc_rootmsg(irc, "keygen for account `%s' already in progress", a->tag);
 		return;
 	}
 	
 	if(otrl_privkey_find(irc->otr->us, a->user, a->prpl->name)) {
-		char *s = g_strdup_printf("account %d already has a key, replace it?", n);
+		char *s = g_strdup_printf("account `%s' already has a key, replace it?", a->tag);
 		query_add(irc, NULL, s, yes_keygen, NULL, NULL, a);
 		g_free(s);
 	} else {
@@ -1469,7 +1460,7 @@ irc_user_t *peeruser(irc_t *irc, const char *handle, const char *protocol)
 
 int hexval(char a)
 {
-	int x=tolower(a);
+	int x=g_ascii_tolower(a);
 	
 	if(x>='a' && x<='f')
 		x = x - 'a' + 10;
@@ -1556,7 +1547,7 @@ Fingerprint *match_fingerprint(irc_t *irc, ConnContext *ctx, const char **args)
 	p=prefix;
 	for(i=0; args[i]; i++) {
 		for(j=0; args[i][j]; j++) {
-			char c = toupper(args[i][j]);
+			char c = g_ascii_toupper(args[i][j]);
 			
 			if(n>=40) {
 				irc_rootmsg(irc, "too many fingerprint digits given, expected at most 40");
@@ -1620,7 +1611,7 @@ OtrlPrivKey *match_privkey(irc_t *irc, const char **args)
 	p=prefix;
 	for(i=0; args[i]; i++) {
 		for(j=0; args[i][j]; j++) {
-			char c = toupper(args[i][j]);
+			char c = g_ascii_toupper(args[i][j]);
 			
 			if(n>=40) {
 				irc_rootmsg(irc, "too many fingerprint digits given, expected at most 40");

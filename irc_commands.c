@@ -19,8 +19,8 @@
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in /usr/share/common-licenses/GPL;
-  if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  if not, write to the Free Software Foundation, Inc., 51 Franklin St.,
+  Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #define BITLBEE_CORE
@@ -769,7 +769,9 @@ void irc_exec( irc_t *irc, char *cmd[] )
 		if( g_strcasecmp( irc_commands[i].command, cmd[0] ) == 0 )
 		{
 			/* There should be no typo in the next line: */
-			for( n_arg = 0; cmd[n_arg]; n_arg ++ ); n_arg --;
+			for( n_arg = 0; cmd[n_arg]; n_arg ++ )
+				;
+			n_arg--;
 			
 			if( irc_commands[i].flags & IRC_CMD_PRE_LOGIN && irc->status & USTATUS_LOGGED_IN )
 			{

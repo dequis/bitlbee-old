@@ -19,8 +19,8 @@
 
   You should have received a copy of the GNU General Public License with
   the Debian GNU/Linux distribution in /usr/share/common-licenses/GPL;
-  if not, write to the Free Software Foundation, Inc., 59 Temple Place,
-  Suite 330, Boston, MA  02111-1307  USA
+  if not, write to the Free Software Foundation, Inc., 51 Franklin St.,
+  Fifth Floor, Boston, MA  02110-1301  USA
 */
 
 #include "bitlbee.h"
@@ -431,7 +431,7 @@ void irc_channel_auto_joins( irc_t *irc, account_t *acc )
 			   can only auto-join them if their account is online. */
 			char *acc_s;
 			
-			if( !aj && !( ic->flags & IRC_CHANNEL_JOINED ) )
+			if( !aj || ( ic->flags & IRC_CHANNEL_JOINED ) )
 				/* Only continue if this one's marked as auto_join
 				   or if we're in it already. (Possible if the
 				   client auto-rejoined it before identyfing.) */
@@ -574,7 +574,7 @@ static gboolean control_channel_privmsg( irc_channel_t *ic, const char *msg )
 	const char *s;
 	
 	/* Scan for non-whitespace chars followed by a colon: */
-	for( s = msg; *s && !isspace( *s ) && *s != ':' && *s != ','; s ++ ) {}
+	for( s = msg; *s && !g_ascii_isspace( *s ) && *s != ':' && *s != ','; s ++ ) {}
 	
 	if( *s == ':' || *s == ',' )
 	{
@@ -582,7 +582,7 @@ static gboolean control_channel_privmsg( irc_channel_t *ic, const char *msg )
 		
 		memset( to, 0, sizeof( to ) );
 		strncpy( to, msg, s - msg );
-		while( *(++s) && isspace( *s ) ) {}
+		while( *(++s) && g_ascii_isspace( *s ) ) {}
 		msg = s;
 		
 		if( !( iu = irc_user_by_name( irc, to ) ) )
