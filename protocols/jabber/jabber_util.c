@@ -825,8 +825,8 @@ gboolean jabber_set_me( struct im_connection *ic, const char *me )
 	jd->server ++;
 
 	/* Set the "internal" account username, for groupchats */
-	g_free( ic->acc->user_internal );
-	ic->acc->user_internal = g_strdup( jd->me );
+	g_free( jd->internal_jid );
+	jd->internal_jid = g_strdup( jd->me );
 	
 	return TRUE;
 }

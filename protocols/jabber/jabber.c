@@ -333,6 +333,7 @@ static void jabber_logout( struct im_connection *ic )
 	
 	g_free( jd->oauth2_access_token );
 	g_free( jd->away_message );
+	g_free( jd->internal_jid );
 	g_free( jd->username );
 	g_free( jd->me );
 	g_free( jd );
@@ -645,6 +646,13 @@ void *jabber_buddy_action( struct bee_user *bu, const char *action, char * const
 	return NULL;
 }
 
+gboolean jabber_handle_is_self( struct im_connection *ic, const char *who ) {
+	struct jabber_data *jd = ic->proto_data;
+	return ( ( g_strcasecmp( who, ic->acc->user ) == 0 ) ||
+		 ( jd->internal_jid &&
+		   g_strcasecmp( who, jd->internal_jid ) == 0 ) );
+}
+
 void jabber_initmodule()
 {
 	int i;
@@ -672,6 +680,7 @@ void jabber_initmodule()
 	funcs.keepalive = jabber_keepalive;
 	funcs.send_typing = jabber_send_typing;
 	funcs.handle_cmp = g_strcasecmp;
+	funcs.handle_is_self = jabber_handle_is_self;
 	funcs.transfer_request = jabber_si_transfer_request;
 	funcs.buddy_action_list = jabber_buddy_action_list;
 	funcs.buddy_action = jabber_buddy_action;

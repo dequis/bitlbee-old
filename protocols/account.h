@@ -33,7 +33,6 @@ typedef struct account
 	char *pass;
 	char *server;
 	char *tag;
-	char *user_internal;
 	
 	int auto_connect;
 	int auto_reconnect_delay;
@@ -60,8 +59,6 @@ char *set_eval_account_reconnect_delay( set_t *set, char *value );
 int account_reconnect_delay( account_t *a );
 
 int protocol_account_islocal( const char* protocol );
-
-gboolean account_is_handle( account_t *acc, const char *handle );
 
 typedef enum
 {
