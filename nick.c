@@ -404,7 +404,7 @@ int nick_lc( irc_t *irc, char *nick )
 		gchar *down = g_utf8_strdown( nick, -1 );
 		if( strlen( down ) > strlen( nick ) )
 		{
-			truncate_utf8( down, strlen(nick) );
+			truncate_utf8( down, strlen( nick ) );
 		}
 		strcpy( nick, down );
 		g_free( down );

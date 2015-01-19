@@ -50,7 +50,7 @@ static void twitter_main_loop_start(struct im_connection *ic)
 {
 	struct twitter_data *td = ic->proto_data;
 
-	char *last_tweet = set_getstr(&ic->acc->set, "last_tweet");
+	char *last_tweet = set_getstr(&ic->acc->set, "_last_tweet");
 	if (last_tweet)
 		td->timeline_id = g_ascii_strtoull(last_tweet, NULL, 0);
 
@@ -330,8 +330,8 @@ static void twitter_init(account_t * acc)
 
 	s = set_add(&acc->set, "strip_newlines", "false", set_eval_bool, acc);
 	
-	s = set_add(&acc->set, "last_tweet", "0", NULL, acc);
-	s->flags |= SET_HIDDEN;
+	s = set_add(&acc->set, "_last_tweet", "0", NULL, acc);
+	s->flags |= SET_HIDDEN | SET_NOSAVE;
 
 	if (strcmp(acc->prpl->name, "twitter") == 0) {
 		s = set_add(&acc->set, "stream", "true", set_eval_bool, acc);
