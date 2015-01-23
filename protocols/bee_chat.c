@@ -83,7 +83,7 @@ static gboolean handle_is_self( struct im_connection *ic, const char *handle )
 {
 	return ( ic->acc->prpl->handle_is_self ) ?
 		 ic->acc->prpl->handle_is_self( ic, handle ) :
-		 ic->acc->prpl->handle_cmp( ic->acc->user, handle );
+		 ( ic->acc->prpl->handle_cmp( ic->acc->user, handle ) == 0 );
 }
 
 void imcb_chat_msg( struct groupchat *c, const char *who, char *msg, uint32_t flags, time_t sent_at )
