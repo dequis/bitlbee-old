@@ -523,7 +523,8 @@ char *xt_find_attr( struct xt_node *node, const char *key )
 	return node->attr[i].value;
 }
 
-struct xt_node *xt_find_node_by_attr( struct xt_node *xt, const char *tag, const char *key, const char *value ) {
+struct xt_node *xt_find_node_by_attr( struct xt_node *xt, const char *tag, const char *key, const char *value )
+{
 	struct xt_node *c;
 	char *s;
 
