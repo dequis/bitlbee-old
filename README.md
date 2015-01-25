@@ -5,6 +5,30 @@
 [![Build Status](https://travis-ci.org/dequis/bitlbee.svg?branch=wip%2Ftravis)](https://travis-ci.org/dequis/bitlbee)
 [![Coverity Scan Build Status](https://scan.coverity.com/projects/3287/badge.svg)](https://scan.coverity.com/projects/3287)
 
+**ZOMG upstream migrated to git:** <https://github.com/bitlbee/bitlbee/>
+
+This repo (specifically, the develop branch and derivatives) is now deprecated.
+
+The `dequis/master` branch became `bitlbee/master` and `bitlbee/develop`, and all
+other branches need to be migrated.
+
+To rebase a branch that was based on this one, do `git rebase -i master` and
+remove all the conflicting commits such as the ones highlighted below:
+
+![](http://dump.dequis.org/jxE1J.png)
+
+All those are conflicting in different ways, just throw them away and leave the
+ones you care about (using 7ee644f and below as an example, those were in the
+process of upstreaming before the git migration happened)
+
+Alternatively, squashing a branch in a single commit and then cherry picking it
+to master also works.
+
+The issue tracker will remain here as my personal TODO list - the official bug
+tracker is still trac.
+
+## Old readme stuff follows
+
 This is an evil fork of BitlBee, using the evil platform known as 'github'.
 
 Collecting random patches and breaking random stuff. Using [git-remote-bzr][] for bzr sync.
