@@ -107,7 +107,7 @@ typedef struct bee_ui_funcs
 	/* State info is already updated, old is provided in case the UI needs a diff. */
 	gboolean (*user_status)( bee_t *bee, struct bee_user *bu, struct bee_user *old );
 	/* On every incoming message. sent_at = 0 means unknown. */
-	gboolean (*user_msg)( bee_t *bee, bee_user_t *bu, const char *msg, time_t sent_at );
+	gboolean (*user_msg)( bee_t *bee, bee_user_t *bu, const char *msg, time_t sent_at, guint32 flags );
 	/* Flags currently defined (OPT_TYPING/THINKING) in nogaim.h. */
 	gboolean (*user_typing)( bee_t *bee, bee_user_t *bu, guint32 flags );
 	/* CTCP-like stuff (buddy action) response */
@@ -131,7 +131,6 @@ typedef struct bee_ui_funcs
 	void (*ft_close)( struct im_connection *ic, struct file_transfer *ft );
 	void (*ft_finished)( struct im_connection *ic, struct file_transfer *ft );
 } bee_ui_funcs_t;
-
 
 /* bee.c */
 bee_t *bee_new();

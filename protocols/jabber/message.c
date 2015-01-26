@@ -23,7 +23,26 @@
 
 #include "jabber.h"
 
+static xt_status jabber_pkt_message_normal( struct xt_node *node, gpointer data, gboolean carbons_sent );
+static xt_status jabber_carbons_message( struct xt_node *node, gpointer data );
+
 xt_status jabber_pkt_message( struct xt_node *node, gpointer data )
+{
+	struct im_connection *ic = data;
+	struct jabber_data *jd = ic->proto_data;
+	char *from = xt_find_attr( node, "from" );
+
+	if( ( strcmp( jd->me, from ) == 0 ) ) /* Probably a Carbons message */
+	{
+		xt_status st;
+		st = jabber_carbons_message( node, data );
+		if( st == XT_HANDLED || st == XT_ABORT )
+			return st;
+	}
+	return jabber_pkt_message_normal( node, data, FALSE );
+}
+
+static xt_status jabber_pkt_message_normal( struct xt_node *node, gpointer data, gboolean carbons_sent )
 {
 	struct im_connection *ic = data;
 	char *from = xt_find_attr( node, "from" );
@@ -37,7 +56,7 @@ xt_status jabber_pkt_message( struct xt_node *node, gpointer data )
 	if( !from )
 		return XT_HANDLED; /* Consider this packet corrupted. */
 
-	if( request && id )
+	if( request && id && !carbons_sent )
 	{
 		/* Send a message receipt (XEP-0184), looking like this:
 		 * <message
@@ -63,7 +82,7 @@ xt_status jabber_pkt_message( struct xt_node *node, gpointer data )
 	{
 		/* Handle type=error packet. */
 	}
-	else if( type && from && strcmp( type, "groupchat" ) == 0 )
+	else if( type && from && !carbons_sent && strcmp( type, "groupchat" ) == 0 )
 	{
 		jabber_chat_pkt_message( ic, bud, node );
 	}
@@ -134,8 +153,16 @@ xt_status jabber_pkt_message( struct xt_node *node, gpointer data )
 			fullmsg = g_string_append( fullmsg, body->text );
 		
 		if( fullmsg->len > 0 )
+		{
+			uint32_t flags = 0;
+			if( carbons_sent )
+			{
+				from = xt_find_attr( node, "to" );
+				flags |= OPT_CARBONS_SENT;
+			}
 			imcb_buddy_msg( ic, from, fullmsg->str,
-			                0, jabber_get_timestamp( node ) );
+			                flags, jabber_get_timestamp( node ) );
+		}
 		if( room )
 			imcb_chat_invite( ic, room, from, reason );
 		
@@ -168,4 +195,41 @@ xt_status jabber_pkt_message( struct xt_node *node, gpointer data )
 	}
 	
 	return XT_HANDLED;
+}
+
+static xt_status jabber_carbons_message( struct xt_node *node, gpointer data )
+{
+	struct im_connection *ic = data;
+	struct xt_node *wrap, *fwd, *msg;
+	gboolean carbons_sent;
+
+	if( ( wrap = xt_find_node( node->children, "received" ) ) )
+		carbons_sent = FALSE;
+	else if( ( wrap = xt_find_node( node->children, "sent" ) ) )
+		carbons_sent = TRUE;
+	else
+		return XT_NEXT;
+
+	if( strcmp( xt_find_attr( wrap, "xmlns" ), XMLNS_CARBONS ) != 0 )
+		return XT_NEXT;
+
+	/* From this point, we definitely have a Carbons message, so handle accordingly */
+	if( !( fwd = xt_find_node( wrap->children, "forwarded") ) )
+	{
+		imcb_log( ic, "Error: Carbons message has no forwarding stanza" );
+		return XT_ABORT;
+	}
+	if( strcmp( xt_find_attr( fwd, "xmlns" ), XMLNS_FORWARDING ) != 0 )
+	{
+		imcb_log( ic, "Error: Carbons message has malformed forwarding stanza" );
+		return XT_ABORT;
+	}
+
+	if( !( msg = xt_find_node( fwd->children, "message") ) )
+	{
+		imcb_log( ic, "Error: Carbons message has no forwarded message" );
+		return XT_ABORT;
+	}
+
+	return jabber_pkt_message_normal( msg, data, carbons_sent );
 }

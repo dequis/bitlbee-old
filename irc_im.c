@@ -202,7 +202,7 @@ void bee_irc_channel_update( irc_t *irc, irc_channel_t *ic, irc_user_t *iu )
 	}
 }
 
-static gboolean bee_irc_user_msg( bee_t *bee, bee_user_t *bu, const char *msg_, time_t sent_at )
+static gboolean bee_irc_user_msg( bee_t *bee, bee_user_t *bu, const char *msg_, time_t sent_at, guint32 flags )
 {
 	irc_t *irc = bee->ui_data;
 	irc_user_t *iu = (irc_user_t *) bu->ui_data;
@@ -210,10 +210,22 @@ static gboolean bee_irc_user_msg( bee_t *bee, bee_user_t *bu, const char *msg_, 
 	char *prefix = NULL;
 	char *wrapped, *ts = NULL;
 	char *msg = g_strdup( msg_ );
+	char *cmd = "PRIVMSG";
 	GSList *l;
 	
 	if( sent_at > 0 && set_getbool( &irc->b->set, "display_timestamps" ) )
 		ts = irc_format_timestamp( irc, sent_at );
+	
+	if( flags & OPT_CARBONS_SENT )
+	{
+		/* Create a temporary fake user to present Carbons sent messages
+		 * Yes, this is ugly, but IRC does not allow the server to tell the client
+		 * "Hi, you sent these messages" */
+		cmd = "NOTICE";
+		iu = g_memdup( iu, sizeof( irc_user_t ) );
+		iu->user = g_strdup_printf( "<-%s", irc->user->nick );
+		iu->host = "carbons";
+	}
 	
 	dst = irc_user_msgdest( iu );
 	if( dst != irc->user->nick )
@@ -257,7 +269,13 @@ static gboolean bee_irc_user_msg( bee_t *bee, bee_user_t *bu, const char *msg_, 
 	}
 	
 	wrapped = word_wrap( msg, 425 );
-	irc_send_msg( iu, "PRIVMSG", dst, wrapped, prefix );
+	irc_send_msg( iu, cmd, dst, wrapped, prefix );
+	
+	if( flags & OPT_CARBONS_SENT )
+	{
+		g_free( iu->user );
+		g_free( iu );
+	}
 	
 	g_free( wrapped );
 	g_free( prefix );
